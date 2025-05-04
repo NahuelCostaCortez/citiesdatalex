@@ -1,0 +1,119 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+:root {
+  --background: 158 12% 7%;
+  --foreground: 160 5% 95%;
+  
+  --primary: 64 98% 50%;
+  --primary-foreground: 158 12% 7%;
+  
+  --secondary: 160 5% 12%;
+  --secondary-foreground: 160 5% 90%;
+  
+  --muted: 160 5% 16%;
+  --muted-foreground: 160 5% 65%;
+  
+  --accent: 64 98% 50%;
+  --accent-foreground: 158 12% 7%;
+  
+  --card: 160 5% 9%;
+  --card-foreground: 160 5% 95%;
+
+  --border: 160 5% 18%;
+  --input: 160 5% 18%;
+  
+  --success: 142 72% 45%;
+  --warning: 38 92% 50%;
+  --error: 358 100% 68%;
+  
+  --radius: 0.5rem;
+}
+
+:root.light-theme {
+  --background: 0 0% 100%;
+  --foreground: 158 12% 7%;
+  
+  --primary: 64 98% 35%;
+  --primary-foreground: 0 0% 100%;
+  
+  --secondary: 0 0% 96%;
+  --secondary-foreground: 158 12% 7%;
+  
+  --muted: 0 0% 92%;
+  --muted-foreground: 158 12% 45%;
+  
+  --accent: 64 98% 35%;
+  --accent-foreground: 0 0% 100%;
+  
+  --card: 0 0% 98%;
+  --card-foreground: 158 12% 7%;
+
+  --border: 0 0% 90%;
+  --input: 0 0% 90%;
+}
+
+body {
+  @apply bg-background text-foreground antialiased;
+  font-feature-settings: "ss01", "ss02", "cv01", "cv02";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.glass-panel {
+  @apply bg-secondary/70 backdrop-blur-md border border-border/50 rounded-xl shadow-lg;
+}
+
+.glass-surface {
+  @apply bg-background/60 backdrop-blur-md border border-border/30 rounded-lg shadow-md;
+}
+
+.text-gradient {
+  @apply bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent;
+}
+
+.scrollbar-thin {
+  scrollbar-width: thin;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  @apply bg-border rounded-full;
+}
+
+/* Add subtle animation to background */
+@keyframes subtle-flow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.bg-flow {
+  background-size: 200% 200%;
+  animation: subtle-flow 15s ease infinite;
+}
+
+/* Mapbox overrides */
+.mapboxgl-ctrl-bottom-right, 
+.mapboxgl-ctrl-bottom-left {
+  @apply hidden !important;
+}

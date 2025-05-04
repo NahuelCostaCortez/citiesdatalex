@@ -1,0 +1,66 @@
+[
+  {
+    "id": "DOC_UE",
+    "descripcion": "Documento UE"
+  },
+  {
+    "id": "REG_UE",
+    "descripcion": "Reglamento UE"
+  },
+  {
+    "id": "DIR_UE",
+    "descripcion": "Directiva UE"
+  },
+  {
+    "id": "UNE_ISO",
+    "descripcion": "Normas UNE-ISO"
+  },
+  {
+    "id": "DOC_NA",
+    "descripcion": "Documento Nacional"
+  },
+  {
+    "id": "LEY_EST",
+    "descripcion": "Ley estatal"
+  },
+  {
+    "id": "REG_EST",
+    "descripcion": "Reglamento estatal"
+  },
+  {
+    "id": "LEY_CCAA",
+    "descripcion": "Ley CCAA"
+  },
+  {
+    "id": "REG_CCAA",
+    "descripcion": "Reglamento CCAA"
+  },
+  {
+    "id": "PLAN_TER",
+    "descripcion": "Planeamiento territorial"
+  },
+  {
+    "id": "PLAN_URB",
+    "descripcion": "Planeamiento urbanístico"
+  },
+  {
+    "id": "WHITE_PAPER",
+    "descripcion": "Libro blanco"
+  },
+  {
+    "id": "NOTICIA",
+    "descripcion": "Noticia"
+  },
+  {
+    "id": "DECISION",
+    "descripcion": "Decisión"
+  },
+  {
+    "id": "INST_AGREE",
+    "descripcion": "Acuerdo institucional"
+  },
+  {
+    "id": "OTROS",
+    "descripcion": "Otros"
+  }
+]

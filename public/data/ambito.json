@@ -1,0 +1,22 @@
+[
+  {
+    "id": "COM",
+    "descripcion": "Comunitario"
+  },
+  {
+    "id": "EST",
+    "descripcion": "Estatal"
+  },
+  {
+    "id": "CCAA",
+    "descripcion": "Autonómico"
+  },
+  {
+    "id": "PROV",
+    "descripcion": "Provincial"
+  },
+  {
+    "id": "MUN",
+    "descripcion": "Municipal"
+  }
+]

@@ -1,0 +1,807 @@
+[
+  {
+    "id": "ECO_010000",
+    "descripcion": "Competitividad",
+    "categoria_padre": "Sostenibilidad Económica"
+  },
+  {
+    "id": "ECO_020000",
+    "descripcion": "Economía colaborativa",
+    "categoria_padre": "Sostenibilidad Económica"
+  },
+  {
+    "id": "ECO_030000",
+    "descripcion": "Economía informal",
+    "categoria_padre": "Sostenibilidad Económica"
+  },
+  {
+    "id": "ECO_040000",
+    "descripcion": "Economía/desarrollo local",
+    "categoria_padre": "Sostenibilidad Económica"
+  },
+  {
+    "id": "ECO_050000",
+    "descripcion": "Economía del conocimiento",
+    "categoria_padre": "Sostenibilidad Económica"
+  },
+  {
+    "id": "ECO_050100",
+    "descripcion": "Investigación e Innovación",
+    "categoria_padre": "ECO_050000"
+  },
+  {
+    "id": "ECO_060000",
+    "descripcion": "Oferta/calidad de empleo",
+    "categoria_padre": "Sostenibilidad Económica"
+  },
+  {
+    "id": "ECO_070000",
+    "descripcion": "Regulación de mercados",
+    "categoria_padre": "Sostenibilidad Económica"
+  },
+  {
+    "id": "ECO_080000",
+    "descripcion": "Localización de actividades económicas",
+    "categoria_padre": "Sostenibilidad Económica"
+  },
+  {
+    "id": "ECO_090000",
+    "descripcion": "Estructura empresarial/emprendimiento",
+    "categoria_padre": "Sostenibilidad Económica"
+  },
+  {
+    "id": "ECO_100000",
+    "descripcion": "Marca ciudad",
+    "categoria_padre": "Sostenibilidad Económica"
+  },
+  {
+    "id": "ECO_110000",
+    "descripcion": "Industrias culturales",
+    "categoria_padre": "Sostenibilidad Económica"
+  },
+  {
+    "id": "ECO_120000",
+    "descripcion": "Smart region/Estrategias de especialización inteligente",
+    "categoria_padre": "Sostenibilidad Económica"
+  },
+  {
+    "id": "ECO_130000",
+    "descripcion": "Smart city",
+    "categoria_padre": "Sostenibilidad Económica"
+  },
+  {
+    "id": "AMB_010000",
+    "descripcion": "Medio ambiente natural",
+    "categoria_padre": "Sostenibilidad Ambiental"
+  },
+  {
+    "id": "AMB_010100",
+    "descripcion": "Protección del suelo",
+    "categoria_padre": "AMB_010000"
+  },
+  {
+    "id": "AMB_010200",
+    "descripcion": "Alimentación",
+    "categoria_padre": "AMB_010000"
+  },
+  {
+    "id": "AMB_010300",
+    "descripcion": "Biodiversidad",
+    "categoria_padre": "AMB_010000"
+  },
+  {
+    "id": "AMB_010400",
+    "descripcion": "Ecosistemas",
+    "categoria_padre": "AMB_010000"
+  },
+  {
+    "id": "AMB_010500",
+    "descripcion": "Espacios naturales",
+    "categoria_padre": "AMB_010000"
+  },
+  {
+    "id": "AMB_010502",
+    "descripcion": "Parques naturales",
+    "categoria_padre": "AMB_010500"
+  },
+  {
+    "id": "AMB_010503",
+    "descripcion": "Monumentos naturales",
+    "categoria_padre": "AMB_010500"
+  },
+  {
+    "id": "AMB_010504",
+    "descripcion": "Paisajes protegidos",
+    "categoria_padre": "AMB_010500"
+  },
+  {
+    "id": "AMB_010505",
+    "descripcion": "Sitios naturales",
+    "categoria_padre": "AMB_010500"
+  },
+  {
+    "id": "AMB_010600",
+    "descripcion": "Paisaje natural",
+    "categoria_padre": "AMB_010000"
+  },
+  {
+    "id": "AMB_010700",
+    "descripcion": "Redes ecológicas",
+    "categoria_padre": "AMB_010000"
+  },
+  {
+    "id": "AMB_010800",
+    "descripcion": "Agricultura periurbana",
+    "categoria_padre": "AMB_010000"
+  },
+  {
+    "id": "AMB_010900",
+    "descripcion": "Huertos urbanos",
+    "categoria_padre": "AMB_010000"
+  },
+  {
+    "id": "AMB_020000",
+    "descripcion": "Medio ambiente urbano",
+    "categoria_padre": "Sostenibilidad Ambiental"
+  },
+  {
+    "id": "AMB_020100",
+    "descripcion": "Continuidad tejido urbano",
+    "categoria_padre": "AMB_020000"
+  },
+  {
+    "id": "AMB_020200",
+    "descripcion": "Diversidad usos y actividades",
+    "categoria_padre": "AMB_020000"
+  },
+  {
+    "id": "AMB_020300",
+    "descripcion": "Bienes culturales",
+    "categoria_padre": "AMB_020000"
+  },
+  {
+    "id": "AMB_020400",
+    "descripcion": "Paisaje urbano",
+    "categoria_padre": "AMB_020000"
+  },
+  {
+    "id": "AMB_020500",
+    "descripcion": "Parque edificado/edificios/viviendas",
+    "categoria_padre": "AMB_020000"
+  },
+  {
+    "id": "AMB_020600",
+    "descripcion": "Rehabilitación edificatoria",
+    "categoria_padre": "AMB_020000"
+  },
+  {
+    "id": "AMB_020700",
+    "descripcion": "Renovación urbana",
+    "categoria_padre": "AMB_020000"
+  },
+  {
+    "id": "AMB_020800",
+    "descripcion": "Regeneración urbana",
+    "categoria_padre": "AMB_020000"
+  },
+  {
+    "id": "AMB_020900",
+    "descripcion": "Infraestructuras/equipamientos/dotaciones",
+    "categoria_padre": "AMB_020000"
+  },
+  {
+    "id": "AMB_021000",
+    "descripcion": "Espacios públicos",
+    "categoria_padre": "AMB_020000"
+  },
+  {
+    "id": "AMB_021002",
+    "descripcion": "Escala",
+    "categoria_padre": "AMB_021000"
+  },
+  {
+    "id": "AMB_021003",
+    "descripcion": "Equilibrio (Variedad de tipos)",
+    "categoria_padre": "AMB_021000"
+  },
+  {
+    "id": "AMB_021100",
+    "descripcion": "Zonas verdes",
+    "categoria_padre": "AMB_020000"
+  },
+  {
+    "id": "AMB_021200",
+    "descripcion": "Servicios urbanos",
+    "categoria_padre": "AMB_020000"
+  },
+  {
+    "id": "AMB_021202",
+    "descripcion": "Abastecimiento y saneamiento del agua",
+    "categoria_padre": "AMB_021200"
+  },
+  {
+    "id": "AMB_021203",
+    "descripcion": "Sistemas de gestión de ahorro",
+    "categoria_padre": "AMB_021200"
+  },
+  {
+    "id": "AMB_021204",
+    "descripcion": "Recogida y tratamiento de residuos",
+    "categoria_padre": "AMB_021200"
+  },
+  {
+    "id": "AMB_021205",
+    "descripcion": "Suministro energético",
+    "categoria_padre": "AMB_021200"
+  },
+  {
+    "id": "AMB_021300",
+    "descripcion": "Integración de infraestructuras y servicios",
+    "categoria_padre": "AMB_020000"
+  },
+  {
+    "id": "AMB_030000",
+    "descripcion": "Prevención/gestión riesgos accidentes industriales",
+    "categoria_padre": "Sostenibilidad Ambiental"
+  },
+  {
+    "id": "AMB_040000",
+    "descripcion": "Prevención/gestión desastres naturales",
+    "categoria_padre": "Sostenibilidad Ambiental"
+  },
+  {
+    "id": "AMB_050000",
+    "descripcion": "Eficiencia en el uso de recursos naturales",
+    "categoria_padre": "Sostenibilidad Ambiental"
+  },
+  {
+    "id": "CLI_010000",
+    "descripcion": "Energía",
+    "categoria_padre": "Cambio Climático"
+  },
+  {
+    "id": "CLI_010100",
+    "descripcion": "Descarbonización",
+    "categoria_padre": "CLI_010000"
+  },
+  {
+    "id": "CLI_010200",
+    "descripcion": "Consumo, gestión y producción energética",
+    "categoria_padre": "CLI_010000"
+  },
+  {
+    "id": "CLI_010300",
+    "descripcion": "Energías renovables",
+    "categoria_padre": "CLI_010000"
+  },
+  {
+    "id": "CLI_010400",
+    "descripcion": "Contaminación",
+    "categoria_padre": "CLI_010000"
+  },
+  {
+    "id": "CLI_010402",
+    "descripcion": "Contaminación atmosférica",
+    "categoria_padre": "CLI_010400"
+  },
+  {
+    "id": "CLI_010403",
+    "descripcion": "Contaminación lumínica",
+    "categoria_padre": "CLI_010400"
+  },
+  {
+    "id": "CLI_020000",
+    "descripcion": "Movilidad urbana",
+    "categoria_padre": "Cambio Climático"
+  },
+  {
+    "id": "CLI_020100",
+    "descripcion": "Transporte/comunicaciones",
+    "categoria_padre": "CLI_020000"
+  },
+  {
+    "id": "CLI_020200",
+    "descripcion": "Red de itinerarios de peatones",
+    "categoria_padre": "CLI_020000"
+  },
+  {
+    "id": "CLI_020300",
+    "descripcion": "Red de itinerarios de bicicletas",
+    "categoria_padre": "CLI_020000"
+  },
+  {
+    "id": "CLI_020400",
+    "descripcion": "Accesibilidad",
+    "categoria_padre": "CLI_020000"
+  },
+  {
+    "id": "CLI_030000",
+    "descripcion": "Emisiones de gases de efecto invernadero (GEI)",
+    "categoria_padre": "Cambio Climático"
+  },
+  {
+    "id": "CLI_040000",
+    "descripcion": "Efectos peligrosos del cambio climático",
+    "categoria_padre": "Cambio Climático"
+  },
+  {
+    "id": "CLI_040100",
+    "descripcion": "Punto de activación (climate triggers)",
+    "categoria_padre": "CLI_040000"
+  },
+  {
+    "id": "CLI_040200",
+    "descripcion": "Efecto invernadero",
+    "categoria_padre": "CLI_040000"
+  },
+  {
+    "id": "CLI_040300",
+    "descripcion": "Subida del nivel del mar",
+    "categoria_padre": "CLI_040000"
+  },
+  {
+    "id": "CLI_040400",
+    "descripcion": "Aumento de la temperatura media global",
+    "categoria_padre": "CLI_040000"
+  },
+  {
+    "id": "CLI_040500",
+    "descripcion": "Pérdida de biodiversidad",
+    "categoria_padre": "CLI_040000"
+  },
+  {
+    "id": "CLI_040600",
+    "descripcion": "Deshielo",
+    "categoria_padre": "CLI_040000"
+  },
+  {
+    "id": "CLI_040700",
+    "descripcion": "Acidificación de los oceanos",
+    "categoria_padre": "CLI_040000"
+  },
+  {
+    "id": "CLI_040800",
+    "descripcion": "Emigración masiva",
+    "categoria_padre": "CLI_040000"
+  },
+  {
+    "id": "CLI_040900",
+    "descripcion": "Problemas de salud pública",
+    "categoria_padre": "CLI_040000"
+  },
+  {
+    "id": "CLI_041000",
+    "descripcion": "Epidemias",
+    "categoria_padre": "CLI_040000"
+  },
+  {
+    "id": "CLI_041100",
+    "descripcion": "Problemas de seguridad alimentaria",
+    "categoria_padre": "CLI_040000"
+  },
+  {
+    "id": "CLI_041200",
+    "descripcion": "Sequías, inundaciones, huracanes, olas de calor",
+    "categoria_padre": "CLI_040000"
+  },
+  {
+    "id": "CLI_041300",
+    "descripcion": "Intensificación de los fenómenos naturales extremos",
+    "categoria_padre": "CLI_040000"
+  },
+  {
+    "id": "CLI_041400",
+    "descripcion": "Refugiados climáticos",
+    "categoria_padre": "CLI_040000"
+  },
+  {
+    "id": "CLI_041500",
+    "descripcion": "Punto de no retorno (tipping point)",
+    "categoria_padre": "CLI_040000"
+  },
+  {
+    "id": "CLI_050000",
+    "descripcion": "Mitigación de los efectos del cambio climático",
+    "categoria_padre": "Cambio Climático"
+  },
+  {
+    "id": "CLI_050100",
+    "descripcion": "Control de las emisiones de GEI",
+    "categoria_padre": "CLI_050000"
+  },
+  {
+    "id": "CLI_050200",
+    "descripcion": "Eficiencia energética",
+    "categoria_padre": "CLI_050000"
+  },
+  {
+    "id": "CLI_050300",
+    "descripcion": "Energías renovables",
+    "categoria_padre": "CLI_050000"
+  },
+  {
+    "id": "CLI_050400",
+    "descripcion": "Microgrids",
+    "categoria_padre": "CLI_050000"
+  },
+  {
+    "id": "CLI_050500",
+    "descripcion": "Sumideros de carbono",
+    "categoria_padre": "CLI_050000"
+  },
+  {
+    "id": "CLI_050600",
+    "descripcion": "Proyectos REDD",
+    "categoria_padre": "CLI_050000"
+  },
+  {
+    "id": "CLI_050700",
+    "descripcion": "Mercados de emisiones de GEI",
+    "categoria_padre": "CLI_050000"
+  },
+  {
+    "id": "CLI_050800",
+    "descripcion": "Fracking",
+    "categoria_padre": "CLI_050000"
+  },
+  {
+    "id": "CLI_050900",
+    "descripcion": "Captura y almacenamiento de carbono",
+    "categoria_padre": "CLI_050000"
+  },
+  {
+    "id": "CLI_060000",
+    "descripcion": "Adaptación a los efectos del cambio climático",
+    "categoria_padre": "Cambio Climático"
+  },
+  {
+    "id": "CLI_060100",
+    "descripcion": "Planificación",
+    "categoria_padre": "CLI_060000"
+  },
+  {
+    "id": "CLI_060200",
+    "descripcion": "Evaluación de impacto ambiental inversa",
+    "categoria_padre": "CLI_060000"
+  },
+  {
+    "id": "CLI_060300",
+    "descripcion": "Evaluación de riesgos",
+    "categoria_padre": "CLI_060000"
+  },
+  {
+    "id": "CLI_070000",
+    "descripcion": "Geoingeniería",
+    "categoria_padre": "Cambio Climático"
+  },
+  {
+    "id": "CLI_070100",
+    "descripcion": "Gestión de la rediación solar (SRM)",
+    "categoria_padre": "CLI_070000"
+  },
+  {
+    "id": "SOC_010000",
+    "descripcion": "Género",
+    "categoria_padre": "Sostenibilidad Social"
+  },
+  {
+    "id": "SOC_020000",
+    "descripcion": "Juventud",
+    "categoria_padre": "Sostenibilidad Social"
+  },
+  {
+    "id": "SOC_030000",
+    "descripcion": "Población",
+    "categoria_padre": "Sostenibilidad Social"
+  },
+  {
+    "id": "SOC_030100",
+    "descripcion": "Crecimiento población",
+    "categoria_padre": "SOC_030000"
+  },
+  {
+    "id": "SOC_030200",
+    "descripcion": "Decrecimiento/envejecimiento",
+    "categoria_padre": "SOC_030000"
+  },
+  {
+    "id": "SOC_030300",
+    "descripcion": "Censo de población y viviendas",
+    "categoria_padre": "SOC_030000"
+  },
+  {
+    "id": "SOC_040000",
+    "descripcion": "Igualdad/no discriminación",
+    "categoria_padre": "Sostenibilidad Social"
+  },
+  {
+    "id": "SOC_040100",
+    "descripcion": "Minorías",
+    "categoria_padre": "SOC_040000"
+  },
+  {
+    "id": "SOC_050000",
+    "descripcion": "Servicios básicos",
+    "categoria_padre": "Sostenibilidad Social"
+  },
+  {
+    "id": "SOC_050100",
+    "descripcion": "Educación/Formación",
+    "categoria_padre": "SOC_050000"
+  },
+  {
+    "id": "SOC_050200",
+    "descripcion": "Bienestar/Salud pública",
+    "categoria_padre": "SOC_050000"
+  },
+  {
+    "id": "SOC_050300",
+    "descripcion": "Dependencia/Otros servicios sociales",
+    "categoria_padre": "SOC_050000"
+  },
+  {
+    "id": "SOC_050400",
+    "descripcion": "Acceso a saneamiento",
+    "categoria_padre": "SOC_050000"
+  },
+  {
+    "id": "SOC_050500",
+    "descripcion": "Acceso al abastecimiento de agua",
+    "categoria_padre": "SOC_050000"
+  },
+  {
+    "id": "SOC_050600",
+    "descripcion": "Acceso servicio recogida basuras",
+    "categoria_padre": "SOC_050000"
+  },
+  {
+    "id": "SOC_050700",
+    "descripcion": "Acceso a la energía doméstica limpia",
+    "categoria_padre": "SOC_050000"
+  },
+  {
+    "id": "SOC_050800",
+    "descripcion": "Acceso a vivienda digna",
+    "categoria_padre": "SOC_050000"
+  },
+  {
+    "id": "SOC_050802",
+    "descripcion": "Deshaucios",
+    "categoria_padre": "SOC_050800"
+  },
+  {
+    "id": "SOC_050803",
+    "descripcion": "Dación en pago",
+    "categoria_padre": "SOC_050800"
+  },
+  {
+    "id": "SOC_050804",
+    "descripcion": "Alojamientos dotacionales",
+    "categoria_padre": "SOC_050800"
+  },
+  {
+    "id": "SOC_050805",
+    "descripcion": "Cesión en uso",
+    "categoria_padre": "SOC_050800"
+  },
+  {
+    "id": "SOC_050900",
+    "descripcion": "Acceso a medios de transporte público",
+    "categoria_padre": "SOC_050000"
+  },
+  {
+    "id": "SOC_060000",
+    "descripcion": "Segregación urbana",
+    "categoria_padre": "Sostenibilidad Social"
+  },
+  {
+    "id": "SOC_060100",
+    "descripcion": "Inclusión social",
+    "categoria_padre": "SOC_060000"
+  },
+  {
+    "id": "SOC_060200",
+    "descripcion": "Exclusión social/gentrificación",
+    "categoria_padre": "SOC_060000"
+  },
+  {
+    "id": "SOC_060202",
+    "descripcion": "Retorno",
+    "categoria_padre": "SOC_060200"
+  },
+  {
+    "id": "SOC_060300",
+    "descripcion": "Integración",
+    "categoria_padre": "SOC_060000"
+  },
+  {
+    "id": "SOC_060302",
+    "descripcion": "Integración refugiados",
+    "categoria_padre": "SOC_060300"
+  },
+  {
+    "id": "SOC_060303",
+    "descripcion": "Integración colectivos marginales",
+    "categoria_padre": "SOC_060300"
+  },
+  {
+    "id": "SOC_070000",
+    "descripcion": "Vulnerbilidad social",
+    "categoria_padre": "Sostenibilidad Social"
+  },
+  {
+    "id": "SOC_070100",
+    "descripcion": "Conflictividad/seguridad",
+    "categoria_padre": "SOC_070000"
+  },
+  {
+    "id": "SOC_070200",
+    "descripcion": "Viviendas vacías",
+    "categoria_padre": "SOC_070000"
+  },
+  {
+    "id": "SOC_070300",
+    "descripcion": "Infraviviendas",
+    "categoria_padre": "SOC_070000"
+  },
+  {
+    "id": "SOC_070400",
+    "descripcion": "Pobreza Urbana",
+    "categoria_padre": "SOC_070000"
+  },
+  {
+    "id": "SOC_080000",
+    "descripcion": "Innovación social",
+    "categoria_padre": "Sostenibilidad Social"
+  },
+  {
+    "id": "GOB_010000",
+    "descripcion": "Competencias",
+    "categoria_padre": "Gobernanza Urbana"
+  },
+  {
+    "id": "GOB_010100",
+    "descripcion": "Municipio",
+    "categoria_padre": "GOB_010000"
+  },
+  {
+    "id": "GOB_010200",
+    "descripcion": "Provincia",
+    "categoria_padre": "GOB_010000"
+  },
+  {
+    "id": "GOB_010300",
+    "descripcion": "Comarca",
+    "categoria_padre": "GOB_010000"
+  },
+  {
+    "id": "GOB_010400",
+    "descripcion": "Áreas metropolitanas",
+    "categoria_padre": "GOB_010000"
+  },
+  {
+    "id": "GOB_010500",
+    "descripcion": "Otras agrupaciones locales",
+    "categoria_padre": "GOB_010000"
+  },
+  {
+    "id": "GOB_010600",
+    "descripcion": "Comunidades Autónomas",
+    "categoria_padre": "GOB_010000"
+  },
+  {
+    "id": "GOB_010700",
+    "descripcion": "Administración general del Estado",
+    "categoria_padre": "GOB_010000"
+  },
+  {
+    "id": "GOB_010800",
+    "descripcion": "Instituciones comunitarias",
+    "categoria_padre": "GOB_010000"
+  },
+  {
+    "id": "GOB_020000",
+    "descripcion": "Escalas territoriales",
+    "categoria_padre": "Gobernanza Urbana"
+  },
+  {
+    "id": "GOB_020100",
+    "descripcion": "Espacios metropolitanos",
+    "categoria_padre": "GOB_020000"
+  },
+  {
+    "id": "GOB_020200",
+    "descripcion": "Áreas funcionales",
+    "categoria_padre": "GOB_020000"
+  },
+  {
+    "id": "GOB_020300",
+    "descripcion": "Término municipal",
+    "categoria_padre": "GOB_020000"
+  },
+  {
+    "id": "GOB_020400",
+    "descripcion": "Barrios",
+    "categoria_padre": "GOB_020000"
+  },
+  {
+    "id": "GOB_020500",
+    "descripcion": "Distritos",
+    "categoria_padre": "GOB_020000"
+  },
+  {
+    "id": "GOB_020600",
+    "descripcion": "Espacios periurbanos",
+    "categoria_padre": "GOB_020000"
+  },
+  {
+    "id": "GOB_030000",
+    "descripcion": "Participación ciudadana y de agentes sociales",
+    "categoria_padre": "Gobernanza Urbana"
+  },
+  {
+    "id": "GOB_040000",
+    "descripcion": "Planeamiento urbano",
+    "categoria_padre": "Gobernanza Urbana"
+  },
+  {
+    "id": "GOB_050000",
+    "descripcion": "Cooperación territorial (Cross border)",
+    "categoria_padre": "Gobernanza Urbana"
+  },
+  {
+    "id": "GOB_060000",
+    "descripcion": "Financiación",
+    "categoria_padre": "Gobernanza Urbana"
+  },
+  {
+    "id": "GOB_070000",
+    "descripcion": "Regulación",
+    "categoria_padre": "Gobernanza Urbana"
+  },
+  {
+    "id": "AMB_010501",
+    "descripcion": "Parques nacionales",
+    "categoria_padre": "AMB_010500"
+  },
+  {
+    "id": "AMB_020301",
+    "descripcion": "Identidad urbana",
+    "categoria_padre": "AMB_020300"
+  },
+  {
+    "id": "AMB_020501",
+    "descripcion": "Diversidad tipológica",
+    "categoria_padre": "AMB_020500"
+  },
+  {
+    "id": "AMB_021001",
+    "descripcion": "Red de espacios públicos de ciudad",
+    "categoria_padre": "AMB_021000"
+  },
+  {
+    "id": "AMB_021201",
+    "descripcion": "Ciclo urbano del agua",
+    "categoria_padre": "AMB_021200"
+  },
+  {
+    "id": "CLI_010401",
+    "descripcion": "Contaminación acústica",
+    "categoria_padre": "CLI_010400"
+  },
+  {
+    "id": "CLI_070200",
+    "descripcion": "Limpieza de dióxido de carbono (CDR)",
+    "categoria_padre": "CLI_070000"
+  },
+  {
+    "id": "SOC_050801",
+    "descripcion": "Alguiler/Vivienda social",
+    "categoria_padre": "SOC_050800"
+  },
+  {
+    "id": "SOC_060301",
+    "descripcion": "Integración inmigrantes",
+    "categoria_padre": "SOC_060300"
+  }
+]
