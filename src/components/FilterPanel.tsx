@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Check, ChevronDown, ChevronUp } from 'lucide-react';
 import { useRegulations } from '../context/RegulationsContext';
@@ -45,7 +45,15 @@ const getMunicipiosByProvincia = (provinciaId: string) => {
 
 const FilterPanel: React.FC = () => {
   const [expandedSections, setExpandedSections] = useState<string[]>(['ambito']);
-  const { filters, updateFilters, applyFilters } = useRegulations();
+  const { 
+    filters, 
+    updateFilters, 
+    applyFilters, 
+    clearSearchQuery, 
+    resetFilters,
+    forceResetRegulations,
+    regulations,
+  } = useRegulations();
   
   // State for hierarchical location selections
   const [selectedCCAA, setSelectedCCAA] = useState<string>("");
@@ -93,7 +101,6 @@ const FilterPanel: React.FC = () => {
         { id: 'comunitario', label: 'Comunitario' },
         { id: 'estatal', label: 'Estatal' },
         { id: 'autonomico', label: 'Autonómico' },
-		{ id: 'provincial', label: 'Provincial' },
         { id: 'municipal', label: 'Municipal' },
       ],
     },
@@ -116,28 +123,60 @@ const FilterPanel: React.FC = () => {
   };
   
   const handleCCAAChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const ccaa = e.target.value;
-    setSelectedCCAA(ccaa);
+    const ccaaId = e.target.value;
+    setSelectedCCAA(ccaaId);
     setSelectedProvincia("");
     setSelectedMunicipio("");
+    
+    // Log the selected CCAA ID and name
+    const selectedAutonomia = autonomiasData.find(ccaa => ccaa.autonomia_id === ccaaId);
   };
   
   const handleProvinciaChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const provincia = e.target.value;
-    setSelectedProvincia(provincia);
+    const provinciaId = e.target.value;
+    setSelectedProvincia(provinciaId);
     setSelectedMunicipio("");
+    
+    // Log the selected provincia ID and name
+    const selectedProvincia = provinciasData.find(prov => prov.provincia_id === provinciaId);
   };
   
   const handleMunicipioChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const municipio = e.target.value;
-    setSelectedMunicipio(municipio);
+    const municipioId = e.target.value;
+    setSelectedMunicipio(municipioId);
+    
+    // Log the selected municipio ID and name
+    const selectedMunicipio = municipiosData.find(mun => mun.municipio_id === municipioId);
   };
   
   const handleApplyFilters = () => {
+    // Before creating the filter, log the values to see what's going on
+    
+    // Get the name of the CCAA from its ID for filtering
+    let ccaaName = '';
+    if (selectedCCAA) {
+      const selectedAutonomia = autonomiasData.find(ccaa => ccaa.autonomia_id === selectedCCAA);
+      ccaaName = selectedAutonomia?.nombre || '';
+    }
+    
+    // Get the name of the provincia from its ID for filtering
+    let provinciaName = '';
+    if (selectedProvincia) {
+      const selectedProv = provinciasData.find(prov => prov.provincia_id === selectedProvincia);
+      provinciaName = selectedProv?.nombre || '';
+    }
+    
+    // Get the name of the municipio from its ID for filtering
+    let municipioName = '';
+    if (selectedMunicipio) {
+      const selectedMun = municipiosData.find(mun => mun.municipio_id === selectedMunicipio);
+      municipioName = selectedMun?.nombre || '';
+    }
+    
     const locationFilter = {
-      ccaa: selectedCCAA || undefined,
-      provincia: selectedProvincia || undefined,
-      municipio: selectedMunicipio || undefined
+      ccaa: ccaaName || undefined,
+      provincia: provinciaName || undefined,
+      municipio: municipioName || undefined
     };
     
     // Remove empty values from the location filter
@@ -146,21 +185,28 @@ const FilterPanel: React.FC = () => {
         delete locationFilter[key as keyof typeof locationFilter];
       }
     });
-    
+        
     // Apply filters with the location filter
     applyFilters(Object.keys(locationFilter).length > 0 ? locationFilter : undefined);
   };
   
-  const handleClearFilters = () => {
-    Object.keys(filters).forEach(section => {
-      updateFilters(section, '', true);
-    });
+  // Create an enhanced clear filters function
+  const handleClearFilters = () => {    
+    // 1. Reset UI state (dropdown values)
     setSelectedCCAA("");
     setSelectedProvincia("");
     setSelectedMunicipio("");
     
-    // Reset the displayed regulations
-    applyFilters();
+    // 2. Clear all filters in the context
+    Object.keys(filters).forEach(section => {
+      updateFilters(section, '', true);
+    });
+    
+    // 3. Clear any search query
+    clearSearchQuery();
+    
+    // 4. Use the direct force reset method to bypass all filtering logic
+    forceResetRegulations();
   };
 
   // Get currently available provinces based on selected CCAA

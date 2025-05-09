@@ -26,19 +26,30 @@ export const testConnection = async (): Promise<boolean> => {
  */
 export const fetchRegulations = async (): Promise<Regulation[]> => {
   try {
-    const { data, error } = await supabase
-      .from('registros')
-      .select('*');
-    
-    if (error) {
-      throw new Error(`Error fetching regulations: ${error.message}`);
+    let allData: Regulation[] = [];
+    let page = 0;
+    const pageSize = 1000;
+    let hasMore = true;
+
+    while (hasMore) {
+      const { data, error } = await supabase
+        .from('registros')
+        .select('*')
+        .range(page * pageSize, (page + 1) * pageSize - 1);
+      
+      if (error) {
+        throw new Error(`Error fetching regulations: ${error.message}`);
+      }
+      
+      if (!data || data.length === 0) {
+        hasMore = false;
+      } else {
+        allData = [...allData, ...data];
+        page++;
+      }
     }
     
-    if (!data) {
-      return [];
-    }
-    
-    return data;
+    return allData;
   } catch (error) {
     console.error('Failed to fetch regulations:', error);
     throw error;

@@ -248,6 +248,11 @@ const RegulationsPanel: React.FC = () => {
                       
                       {/* Tags for sustainability and governance */}
                       <div className="flex flex-wrap gap-1 mb-3">
+						{regulation.sostenibilidad_economica && (
+                          <span className="px-2 py-0.5 text-xs rounded-full bg-yellow-100/50 text-yellow-700">
+                            Sostenibilidad Económica
+                          </span>
+                        )}
                         {regulation.sostenibilidad_ambiental && (
                           <span className="px-2 py-0.5 text-xs rounded-full bg-emerald-100/50 text-emerald-700">
                             Sost. Ambiental
@@ -280,7 +285,7 @@ const RegulationsPanel: React.FC = () => {
                           <div></div> 
                         )}
                         
-                        <span className="text-primary/80 group-hover:text-primary transition-colors">View detalles</span>
+                        <span className="text-primary/80 group-hover:text-primary transition-colors">Ver detalles</span>
                       </div>
                     </>
                   ) : (
@@ -316,6 +321,11 @@ const RegulationsPanel: React.FC = () => {
                           )}
                           
                           {/* Tags for sustainability and governance */}
+						  {regulation.sostenibilidad_economica && (
+                            <span className="px-1.5 py-0.5 text-xs rounded-full bg-yellow-100/50 text-yellow-700">
+                              SE
+                            </span>
+                          )}
                           {regulation.sostenibilidad_ambiental && (
                             <span className="px-1.5 py-0.5 text-xs rounded-full bg-emerald-100/50 text-emerald-700">
                               SA

@@ -6,7 +6,7 @@ import { useRegulations } from '../context/RegulationsContext';
 const SearchBar: React.FC = () => {
   const [query, setQuery] = useState('');
   const [isFocused, setIsFocused] = useState(false);
-  const { searchRegulations } = useRegulations();
+  const { searchRegulations, isLoading, error } = useRegulations();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,7 +35,7 @@ const SearchBar: React.FC = () => {
         >
           <Search 
             size={18} 
-            className={`mr-2 transition-colors ${isFocused ? 'text-primary' : 'text-muted-foreground'}`} 
+            className={`mr-2 transition-colors ${isFocused ? 'text-primary' : 'text-muted-foreground'} ${isLoading ? 'animate-pulse' : ''}`} 
           />
           
           <input
@@ -46,6 +46,7 @@ const SearchBar: React.FC = () => {
             onChange={(e) => setQuery(e.target.value)}
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
+            disabled={isLoading}
           />
           
           <AnimatePresence>
@@ -58,12 +59,23 @@ const SearchBar: React.FC = () => {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.8 }}
                 transition={{ duration: 0.15 }}
+                disabled={isLoading}
               >
                 <X size={16} className="text-muted-foreground" />
               </motion.button>
             )}
           </AnimatePresence>
+          
+          {isLoading && (
+            <span className="ml-2 text-xs text-muted-foreground animate-pulse">Buscando...</span>
+          )}
         </div>
+        
+        {error && (
+          <div className="absolute top-full left-0 right-0 mt-1 p-2 text-xs bg-destructive/10 text-destructive rounded-md">
+            {error}
+          </div>
+        )}
       </form>
     </motion.div>
   );

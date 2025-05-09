@@ -12,10 +12,6 @@
     "descripcion": "Autonómico"
   },
   {
-    "id": "PROV",
-    "descripcion": "Provincial"
-  },
-  {
     "id": "MUN",
     "descripcion": "Municipal"
   }

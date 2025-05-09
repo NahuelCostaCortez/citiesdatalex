@@ -14,13 +14,14 @@ const RegulationDetail: React.FC = () => {
   const { selectedRegulation, clearSelectedRegulation, isLoading, error } = useRegulations();
   const [activeTab, setActiveTab] = useState('información');
   const [chatMessages, setChatMessages] = useState<{text: string, sender: 'user' | 'ai'}[]>([
-    { text: 'Hello! I can help you understand this regulation. What would you like to know?', sender: 'ai' }
+    { text: 'Hola! Estoy aquí para ayudarte a entender este documento. ¿Qué te gustaría saber?', sender: 'ai' }
   ]);
   const [inputValue, setInputValue] = useState('');
   
   // State to store descriptor data
   const [sostenibilidadAmbiental, setSostenibilidadAmbiental] = useState<DescriptorData[]>([]);
   const [sostenibilidadSocial, setSostenibilidadSocial] = useState<DescriptorData[]>([]);
+  const [sostenibilidadEconomica, setSostenibilidadEconomica] = useState<DescriptorData[]>([]);
   const [cambioclimatico, setCambioClimatico] = useState<DescriptorData[]>([]);
   const [gobernanzaUrbana, setGobernanzaUrbana] = useState<DescriptorData[]>([]);
   const [descriptorsLoading, setDescriptorsLoading] = useState(false);
@@ -77,6 +78,11 @@ const RegulationDetail: React.FC = () => {
             setSostenibilidadSocial(data);
           }
           
+          if (selectedRegulation.sostenibilidad_economica) {
+            const data = await processCodesString(selectedRegulation.sostenibilidad_economica);
+            setSostenibilidadEconomica(data);
+          }
+          
           if (selectedRegulation.cambio_climatico) {
             const data = await processCodesString(selectedRegulation.cambio_climatico);
             setCambioClimatico(data);
@@ -112,7 +118,7 @@ const RegulationDetail: React.FC = () => {
     // Simulate AI response
     setTimeout(() => {
       setChatMessages(prev => [...prev, { 
-        text: `This regulation ${selectedRegulation?.titulo} applies to ${selectedRegulation?.ciudad} and focuses on ${ambitoLabel || selectedRegulation?.ambito} issues. It was published on ${selectedRegulation?.date}.`, 
+        text: `Aún me están programando, estaré disponible pronto!`, 
         sender: 'ai' 
       }]);
     }, 1000);
@@ -301,9 +307,7 @@ const RegulationDetail: React.FC = () => {
                       <div className="glass-surface p-4">
                         <h3 className="text-base font-semibold mb-2">Resumen</h3>
                         <p className="text-sm text-muted-foreground leading-relaxed">
-                          {selectedRegulation.titulo} establishes the guidelines for {selectedRegulation.ambito.toLowerCase()} 
-                          development in {selectedRegulation.ciudad}. This regulatory framework aims to ensure sustainable 
-                          and equitable growth while preserving cultural heritage and environmental quality.
+                          {selectedRegulation.resumen}
                         </p>
                         
                         <div className="mt-4 pt-3 border-t border-border/30">
@@ -314,7 +318,7 @@ const RegulationDetail: React.FC = () => {
                             className="flex items-center text-sm text-primary hover:text-primary/80 transition-colors"
                           >
                             <ArrowDownSquare size={16} className="mr-2" />
-                            <span>Ir al enlace oficial</span>
+                            <span>Ir al documento oficial</span>
                           </a>
                         </div>
                       </div>
@@ -336,6 +340,20 @@ const RegulationDetail: React.FC = () => {
                                   {sostenibilidadAmbiental.map((item, idx) => (
                                     <span key={`amb-${idx}`} className="px-3 py-1.5 text-sm rounded-full bg-emerald-100/50 text-emerald-700 flex items-center">
                                       <span className="w-2 h-2 rounded-full bg-emerald-500 mr-2"></span>
+                                      {item.descripcion}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            
+                            {sostenibilidadEconomica.length > 0 && (
+                              <div className="w-full">
+                                <h4 className="text-sm font-medium mb-1 text-yellow-700">Sostenibilidad Económica</h4>
+                                <div className="flex flex-wrap gap-2">
+                                  {sostenibilidadEconomica.map((item, idx) => (
+                                    <span key={`eco-${idx}`} className="px-3 py-1.5 text-sm rounded-full bg-yellow-100/50 text-yellow-700 flex items-center">
+                                      <span className="w-2 h-2 rounded-full bg-yellow-500 mr-2"></span>
                                       {item.descripcion}
                                     </span>
                                   ))}
@@ -386,6 +404,7 @@ const RegulationDetail: React.FC = () => {
                             )}
                             
                             {sostenibilidadAmbiental.length === 0 &&
+                             sostenibilidadEconomica.length === 0 &&
                              cambioclimatico.length === 0 &&
                              sostenibilidadSocial.length === 0 &&
                              gobernanzaUrbana.length === 0 && (
@@ -447,7 +466,7 @@ const RegulationDetail: React.FC = () => {
                       type="text"
                       value={inputValue}
                       onChange={(e) => setInputValue(e.target.value)}
-                      placeholder="Pregunta sobre esta regulación..."
+                      placeholder="Pregunta sobre este documento..."
                       className="flex-1 bg-muted border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50"
                     />
                     <button 
