@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode, useCallback, useEffect, useRef } from 'react';
-import { fetchRegulations, fetchRegulationById, testConnection } from '../services/api';
+import { fetchRegulations, fetchRegulationById, testConnection, getRegulationsCount, fetchPaginatedRegulations } from '../services/api';
 
 // Helper function to safely access values with fallbacks
 const safeGetValue = (obj: any, key: string, defaultValue: string = ''): string => {
@@ -37,6 +37,9 @@ interface RegulationsContextType {
   filterActive: boolean;
   isLoading: boolean;
   error: string | null;
+  totalCount: number;
+  currentPage: number;
+  hasMore: boolean;
   selectRegulation: (id: string) => void;
   clearSelectedRegulation: () => void;
   updateFilters: (section: string, option: string, clear?: boolean) => void;
@@ -45,6 +48,8 @@ interface RegulationsContextType {
   resetFilters: () => void;
   forceResetRegulations: () => void;
   applyFilters: (locationFilter?: {ccaa?: string, provincia?: string, municipio?: string}) => void;
+  loadNextPage: () => void;
+  loadPage: (page: number) => void;
 }
 
 const RegulationsContext = createContext<RegulationsContextType | undefined>(undefined);
@@ -64,18 +69,25 @@ export const RegulationsProvider: React.FC<{ children: ReactNode }> = ({ childre
   const [filterActive, setFilterActive] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   
+  // Pagination state
+  const [totalCount, setTotalCount] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [pageSize] = useState(60); // Load 5 pages worth of data (12 * 5)
+  
   // Track if data has been loaded
   const dataLoaded = useRef(false);
+  const loadingAllData = useRef(false);
 
-  // Test connection and fetch regulations when component mounts
+  // Test connection and fetch initial data when component mounts
   useEffect(() => {
     const initialize = async () => {
       if (dataLoaded.current) {
-        console.log('Data already loaded, skipping initialization');
+        console.log('Metadata already loaded, skipping initialization');
         return; // Prevent multiple loads
       }
       
-      console.log('Initializing RegulationsContext and loading data');
+      console.log('Initializing RegulationsContext and loading initial data');
       setIsLoading(true);
       setError(null);
       
@@ -90,18 +102,29 @@ export const RegulationsProvider: React.FC<{ children: ReactNode }> = ({ childre
           return;
         }
         
-        // Then fetch regulations
-        const data = await fetchRegulations();
+        // First, get the total count
+        const count = await getRegulationsCount();
+        setTotalCount(count);
         
-        if (data.length === 0) {
+        if (count === 0) {
           console.warn('No regulations found in the database');
           setError('No se encontraron datos en la base de datos.');
+          setHasMore(false);
         } else {
-          setRegulations(data);
-          setAllRegulations(data); // Cache all regulations
+          // Then fetch first page(s) of data
+          const initialData = await fetchPaginatedRegulations(1, pageSize);
+          
+          setRegulations(initialData);
+          setAllRegulations(initialData); // Cache initial regulations
           dataLoaded.current = true;
-          console.log('Data loaded successfully');
+          console.log('Initial data loaded successfully, total count:', count);
           setError(null);
+          setHasMore(initialData.length < count);
+          
+          // Load all remaining data in the background without blocking UI
+          if (initialData.length < count) {
+            loadAllRemainingData();
+          }
         }
       } catch (err) {
         console.error('Error during initialization:', err);
@@ -112,7 +135,146 @@ export const RegulationsProvider: React.FC<{ children: ReactNode }> = ({ childre
     };
     
     initialize();
-  }, []);
+  }, [pageSize]);
+
+  // Load all remaining data in background
+  const loadAllRemainingData = useCallback(async () => {
+    if (loadingAllData.current) {
+      console.log('Already loading all data in background');
+      return;
+    }
+    
+    loadingAllData.current = true;
+    console.log('Starting background load of all remaining data');
+    
+    try {
+      let allLoaded = false;
+      let currentPage = 2; // Start from second batch since first batch is already loaded
+      
+      while (!allLoaded) {
+        console.log(`Loading batch ${currentPage} in background`);
+        const batchData = await fetchPaginatedRegulations(currentPage, pageSize);
+        
+        if (batchData.length === 0) {
+          allLoaded = true;
+          console.log('All data loaded successfully in background');
+        } else {
+          // Merge with existing data, avoiding duplicates
+          const existingIds = new Set(allRegulations.map(reg => reg.id));
+          const uniqueNewData = batchData.filter(reg => !existingIds.has(reg.id));
+          
+          setAllRegulations(prevData => {
+            const updatedData = [...prevData, ...uniqueNewData];
+            
+            // If no filters active, also update the displayed regulations
+            if (!filterActive && !searchQuery) {
+              setRegulations(updatedData);
+            }
+            
+            return updatedData;
+          });
+          
+          currentPage++;
+        }
+      }
+      
+      // Once all data is loaded, set hasMore to false
+      setHasMore(false);
+      console.log('Background loading complete, all data loaded');
+    } catch (err) {
+      console.error('Error loading all data in background:', err);
+      // Don't set error in UI since this is background loading
+    } finally {
+      loadingAllData.current = false;
+    }
+  }, [pageSize, allRegulations, filterActive, searchQuery]);
+
+  // Load more data function
+  const loadNextPage = useCallback(async () => {
+    if (!hasMore || isLoading) return;
+    
+    setIsLoading(true);
+    
+    try {
+      const nextPage = Math.ceil(allRegulations.length / pageSize) + 1;
+      const newData = await fetchPaginatedRegulations(nextPage, pageSize);
+      
+      if (newData.length === 0) {
+        setHasMore(false);
+      } else {
+        // Append new data to existing data
+        const updatedAllRegulations = [...allRegulations, ...newData];
+        setAllRegulations(updatedAllRegulations);
+        
+        // Update current regulations based on filtering
+        if (!filterActive && !searchQuery) {
+          setRegulations(updatedAllRegulations);
+        } else {
+          // If filters are active, we need to reapply them with the new data
+          applyFilters();
+        }
+        
+        // Check if we have all the data
+        setHasMore(updatedAllRegulations.length < totalCount);
+      }
+    } catch (err) {
+      console.error('Error loading more data:', err);
+      setError('Error al cargar más datos. Por favor, inténtelo de nuevo más tarde.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [hasMore, isLoading, allRegulations, pageSize, filterActive, searchQuery, totalCount]);
+
+  // Load a specific page (modified to check if we're already loading all data)
+  const loadPage = useCallback(async (page: number) => {
+    if (isLoading || loadingAllData.current) return;
+    
+    setIsLoading(true);
+    setCurrentPage(page);
+    
+    try {
+      // Calculate if we already have this page data
+      const startIndex = (page - 1) * (pageSize / 5); // Assuming pageSize is 5x the display size
+      const endIndex = startIndex + (pageSize / 5);
+      
+      // If we already have this page in our cached data
+      if (allRegulations.length >= endIndex) {
+        console.log('Page already loaded, using cached data');
+        setIsLoading(false);
+        return;
+      }
+      
+      // Otherwise, fetch this page and following pages
+      const data = await fetchPaginatedRegulations(page, pageSize);
+      
+      if (data.length === 0) {
+        setHasMore(false);
+      } else {
+        // Merge with existing data, avoiding duplicates
+        const existingIds = new Set(allRegulations.map(reg => reg.id));
+        const uniqueNewData = data.filter(reg => !existingIds.has(reg.id));
+        
+        const updatedAllRegulations = [...allRegulations, ...uniqueNewData];
+        setAllRegulations(updatedAllRegulations);
+        
+        // Update current regulations based on filtering
+        if (!filterActive && !searchQuery) {
+          setRegulations(updatedAllRegulations);
+        } else {
+          // If filters are active, we need to reapply them with the new data
+          applyFilters();
+        }
+        
+        // Check if we have all the data
+        setHasMore(updatedAllRegulations.length < totalCount);
+      }
+    } catch (err) {
+      console.error('Error loading page:', err);
+      setError('Error al cargar la página. Por favor, inténtelo de nuevo más tarde.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [isLoading, allRegulations, pageSize, filterActive, searchQuery, totalCount]);
 
   const selectRegulation = useCallback(async (id: string) => {
     setIsLoading(true);
@@ -373,7 +535,7 @@ export const RegulationsProvider: React.FC<{ children: ReactNode }> = ({ childre
     } finally {
       setIsLoading(false);
     }
-  }, [filters, searchQuery, allRegulations]);
+  }, [allRegulations, filters, searchQuery]);
 
   // Add a new force reset function
   const forceResetRegulations = useCallback(() => {
@@ -402,7 +564,12 @@ export const RegulationsProvider: React.FC<{ children: ReactNode }> = ({ childre
         forceResetRegulations,
         applyFilters,
         isLoading,
-        error
+        error,
+        totalCount,
+        currentPage,
+        hasMore,
+        loadNextPage,
+        loadPage
       }}
     >
       {children}

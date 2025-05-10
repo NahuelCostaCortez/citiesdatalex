@@ -80,4 +80,64 @@ export const fetchRegulationById = async (id: string): Promise<Regulation> => {
     console.error(`Failed to fetch regulation with id ${id}:`, error);
     throw error;
   }
+};
+
+/**
+ * Get the total count of regulations
+ */
+export const getRegulationsCount = async (): Promise<number> => {
+  try {
+    const { count, error } = await supabase
+      .from('registros')
+      .select('*', { count: 'exact', head: true });
+    
+    if (error) {
+      throw new Error(`Error getting regulations count: ${error.message}`);
+    }
+    
+    return count || 0;
+  } catch (error) {
+    console.error('Failed to get regulations count:', error);
+    throw error;
+  }
+};
+
+/**
+ * Fetch regulations with pagination
+ */
+export const fetchPaginatedRegulations = async (
+  page: number = 1, 
+  pageSize: number = 12,
+  filters?: any
+): Promise<Regulation[]> => {
+  try {
+    let query = supabase
+      .from('registros')
+      .select('*')
+      .range((page - 1) * pageSize, page * pageSize - 1);
+    
+    // Apply filters if provided
+    if (filters?.searchQuery) {
+      const searchTerm = `%${filters.searchQuery}%`;
+      query = query.or(`titulo.ilike.${searchTerm},ciudad.ilike.${searchTerm},ambito.ilike.${searchTerm}`);
+    }
+    
+    if (filters?.ambito?.length > 0) {
+      // Add ambito filters
+      // Note: Implement specific filter logic based on your schema
+    }
+    
+    // Add other filters as needed
+    
+    const { data, error } = await query;
+    
+    if (error) {
+      throw new Error(`Error fetching paginated regulations: ${error.message}`);
+    }
+    
+    return data || [];
+  } catch (error) {
+    console.error('Failed to fetch paginated regulations:', error);
+    throw error;
+  }
 }; 

@@ -16,7 +16,18 @@ interface RegulationWithLabels {
 const ITEMS_PER_PAGE = 12;
 
 const RegulationsPanel: React.FC = () => {
-  const { regulations, selectRegulation, filterActive, isLoading, error } = useRegulations();
+  const { 
+    regulations, 
+    selectRegulation, 
+    filterActive, 
+    isLoading, 
+    error, 
+    totalCount, 
+    loadNextPage, 
+    loadPage,
+    hasMore
+  } = useRegulations();
+  
   const [sortOption, setSortOption] = useState('recent');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
@@ -77,7 +88,7 @@ const RegulationsPanel: React.FC = () => {
   }, [regulationsWithLabels, sortOption]);
 
   // Calculate pagination values
-  const totalPages = Math.ceil(sortedRegulations.length / ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
   const currentPageItems = sortedRegulations.slice(
     (currentPage - 1) * ITEMS_PER_PAGE, 
     currentPage * ITEMS_PER_PAGE
@@ -111,10 +122,23 @@ const RegulationsPanel: React.FC = () => {
           <div>
             <h2 className="text-xl font-semibold tracking-tight">Resultados</h2>
             <p className="text-xs text-muted-foreground mt-0.5 flex items-center">
-              {filterActive ? (
-                <span className="flex items-center"><Filter size={12} className="mr-1 text-primary" /> {regulations.length} resultados encontrados</span>
+              {isLoading && regulations.length === 0 ? (
+                <span className="flex items-center">
+                  <Loader2 size={12} className="mr-1 animate-spin" /> Cargando...
+                </span>
+              ) : filterActive ? (
+                <span className="flex items-center">
+                  <Filter size={12} className="mr-1 text-primary" /> {totalCount} resultados encontrados
+                </span>
               ) : (
-                <span>{regulations.length} resultados encontrados</span>
+                <>
+                  <span>{totalCount} resultados encontrados</span>
+                  {hasMore && (
+                    <span className="ml-2 text-muted-foreground text-[10px] italic">
+                      (cargando datos adicionales...)
+                    </span>
+                  )}
+                </>
               )}
             </p>
           </div>
@@ -186,12 +210,7 @@ const RegulationsPanel: React.FC = () => {
       </div>
 
       <div className="flex-1 p-4 overflow-y-auto scrollbar-thin">
-        {isLoading ? (
-          <div className="flex flex-col items-center justify-center h-full">
-            <Loader2 className="w-8 h-8 text-primary animate-spin mb-2" />
-            <p className="text-sm text-muted-foreground">Cargando normativas...</p>
-          </div>
-        ) : error ? (
+        {error ? (
           <div className="flex flex-col items-center justify-center h-full">
             <AlertCircle className="w-8 h-8 text-destructive mb-2" />
             <p className="text-sm text-destructive">{error}</p>
@@ -204,163 +223,192 @@ const RegulationsPanel: React.FC = () => {
           </div>
         ) : (
           <div className={viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4' : 'space-y-3'}>
-            <AnimatePresence>
-              {currentPageItems.map((regulation, i) => (
-                <motion.article
-                  key={`${regulation.id}-${i}`}
-                  className={`glass-surface cursor-pointer group hover:border-primary/50 transition-all duration-300 ${
-                    viewMode === 'grid' ? 'p-4' : 'p-3 flex items-start'
-                  }`}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.05 }}
-                  onClick={() => selectRegulation(regulation.id)}
-                  whileHover={{ y: -2 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  {viewMode === 'grid' ? (
-                    <>
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center">
-                          <span className="text-xs text-muted-foreground">
-                            {regulation.ambito_label || regulation.ambito}
-                          </span>
-                        </div>
-                        <span className="px-2 py-0.5 text-xs rounded-full bg-muted text-muted-foreground">
-                          {regulation.escala_normativa_label || regulation.escala_normativa}
-                        </span>
-                      </div>
-                      
-                      <h3 className="font-medium mb-2 group-hover:text-primary transition-colors line-clamp-2">{regulation.titulo}</h3>
-                      
-                      {(regulation.ciudad || regulation.ccaa || regulation.provincia) && (
-                        <div className="flex items-center text-xs text-muted-foreground mb-3">
-                          <MapPin size={12} className="mr-1" />
-                          <span>
-                            {[
-                              regulation.ccaa, 
-                              regulation.provincia, 
-                              regulation.ciudad
-                            ].filter(Boolean).join(', ')}
-                          </span>
-                        </div>
-                      )}
-                      
-                      {/* Tags for sustainability and governance */}
-                      <div className="flex flex-wrap gap-1 mb-3">
-						{regulation.sostenibilidad_economica && (
-                          <span className="px-2 py-0.5 text-xs rounded-full bg-yellow-100/50 text-yellow-700">
-                            Sostenibilidad Económica
-                          </span>
-                        )}
-                        {regulation.sostenibilidad_ambiental && (
-                          <span className="px-2 py-0.5 text-xs rounded-full bg-emerald-100/50 text-emerald-700">
-                            Sost. Ambiental
-                          </span>
-                        )}
-                        {regulation.cambio_climatico && (
-                          <span className="px-2 py-0.5 text-xs rounded-full bg-blue-100/50 text-blue-700">
-                            Cambio Climático
-                          </span>
-                        )}
-                        {regulation.sostenibilidad_social && (
-                          <span className="px-2 py-0.5 text-xs rounded-full bg-amber-100/50 text-amber-700">
-                            Sost. Social
-                          </span>
-                        )}
-                        {regulation.gobernanza_urbana && (
-                          <span className="px-2 py-0.5 text-xs rounded-full bg-purple-100/50 text-purple-700">
-                            Gobernanza
-                          </span>
-                        )}
-                      </div>
-                      
-                      <div className="flex justify-between text-xs mt-auto">
-                        {regulation.date ? (
-                          <div className="flex items-center text-muted-foreground">
-                            <CalendarDays size={12} className="mr-1" />
-                            <span>{regulation.date}</span>
+            {isLoading && regulations.length === 0 ? (
+              // Skeleton loaders for initial load
+              Array.from({ length: ITEMS_PER_PAGE }).map((_, index) => (
+                <div key={index} className="glass-surface p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="h-4 bg-muted/70 rounded w-1/3 animate-pulse"></div>
+                    <div className="h-5 bg-muted/70 rounded-full w-1/4 animate-pulse"></div>
+                  </div>
+                  <div className="h-5 bg-muted/70 rounded w-full mb-3 animate-pulse"></div>
+                  <div className="h-4 bg-muted/70 rounded w-3/4 mb-3 animate-pulse"></div>
+                  <div className="flex flex-wrap gap-1 mb-3">
+                    <div className="h-5 bg-muted/70 rounded-full w-1/3 animate-pulse"></div>
+                    <div className="h-5 bg-muted/70 rounded-full w-1/4 animate-pulse"></div>
+                  </div>
+                  <div className="flex justify-between">
+                    <div className="h-4 bg-muted/70 rounded w-1/4 animate-pulse"></div>
+                    <div className="h-4 bg-muted/70 rounded w-1/5 animate-pulse"></div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <AnimatePresence>
+                {currentPageItems.map((regulation, i) => (
+                  <motion.article
+                    key={`${regulation.id}-${i}`}
+                    className={`glass-surface cursor-pointer group hover:border-primary/50 transition-all duration-300 ${
+                      viewMode === 'grid' ? 'p-4' : 'p-3 flex items-start'
+                    }`}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.05 }}
+                    onClick={() => selectRegulation(regulation.id)}
+                    whileHover={{ y: -2 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    {viewMode === 'grid' ? (
+                      <>
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center">
+                            <span className="text-xs text-muted-foreground">
+                              {regulation.ambito_label || regulation.ambito}
+                            </span>
                           </div>
-                        ) : (
-                          <div></div> 
-                        )}
-                        
-                        <span className="text-primary/80 group-hover:text-primary transition-colors">Ver detalles</span>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div className="flex-shrink-0 w-10 h-10 rounded bg-muted flex items-center justify-center mr-3">
-                        <FileSymlink className="text-primary/80" size={18} />
-                      </div>
-                      
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between mb-1">
                           <span className="px-2 py-0.5 text-xs rounded-full bg-muted text-muted-foreground">
                             {regulation.escala_normativa_label || regulation.escala_normativa}
                           </span>
-                          {regulation.date && (
-                            <span className="text-xs text-muted-foreground">{regulation.date}</span>
-                          )}
                         </div>
                         
-                        <h3 className="font-medium mb-1 group-hover:text-primary transition-colors line-clamp-1">{regulation.titulo}</h3>
+                        <h3 className="font-medium mb-2 group-hover:text-primary transition-colors line-clamp-2">{regulation.titulo}</h3>
                         
-                        <div className="flex flex-wrap items-center gap-1 mb-1">
-                          {(regulation.ciudad || regulation.ccaa || regulation.provincia) && (
-                            <>
-                              <MapPin size={12} className="text-muted-foreground" />
-                              <span className="text-muted-foreground mr-2">
-                                {[
-                                  regulation.ccaa, 
-                                  regulation.provincia, 
-                                  regulation.ciudad
-                                ].filter(Boolean).join(', ')}
-                              </span>
-                            </>
-                          )}
-                          
-                          {/* Tags for sustainability and governance */}
-						  {regulation.sostenibilidad_economica && (
-                            <span className="px-1.5 py-0.5 text-xs rounded-full bg-yellow-100/50 text-yellow-700">
-                              SE
+                        {(regulation.ciudad || regulation.ccaa || regulation.provincia) && (
+                          <div className="flex items-center text-xs text-muted-foreground mb-3">
+                            <MapPin size={12} className="mr-1" />
+                            <span>
+                              {[
+                                regulation.ccaa, 
+                                regulation.provincia, 
+                                regulation.ciudad
+                              ].filter(Boolean).join(', ')}
+                            </span>
+                          </div>
+                        )}
+                        
+                        {/* Tags for sustainability and governance */}
+                        <div className="flex flex-wrap gap-1 mb-3">
+                          {regulation.sostenibilidad_economica && (
+                            <span className="px-2 py-0.5 text-xs rounded-full bg-yellow-100/50 text-yellow-700">
+                              Sostenibilidad Económica
                             </span>
                           )}
                           {regulation.sostenibilidad_ambiental && (
-                            <span className="px-1.5 py-0.5 text-xs rounded-full bg-emerald-100/50 text-emerald-700">
-                              SA
+                            <span className="px-2 py-0.5 text-xs rounded-full bg-emerald-100/50 text-emerald-700">
+                              Sost. Ambiental
                             </span>
                           )}
                           {regulation.cambio_climatico && (
-                            <span className="px-1.5 py-0.5 text-xs rounded-full bg-blue-100/50 text-blue-700">
-                              CC
+                            <span className="px-2 py-0.5 text-xs rounded-full bg-blue-100/50 text-blue-700">
+                              Cambio Climático
                             </span>
                           )}
                           {regulation.sostenibilidad_social && (
-                            <span className="px-1.5 py-0.5 text-xs rounded-full bg-amber-100/50 text-amber-700">
-                              SS
+                            <span className="px-2 py-0.5 text-xs rounded-full bg-amber-100/50 text-amber-700">
+                              Sost. Social
                             </span>
                           )}
                           {regulation.gobernanza_urbana && (
-                            <span className="px-1.5 py-0.5 text-xs rounded-full bg-purple-100/50 text-purple-700">
-                              GU
+                            <span className="px-2 py-0.5 text-xs rounded-full bg-purple-100/50 text-purple-700">
+                              Gobernanza
                             </span>
                           )}
                         </div>
-                      </div>
-                    </>
-                  )}
-                </motion.article>
-              ))}
-            </AnimatePresence>
+                        
+                        <div className="flex justify-between text-xs mt-auto">
+                          {regulation.date ? (
+                            <div className="flex items-center text-muted-foreground">
+                              <CalendarDays size={12} className="mr-1" />
+                              <span>{regulation.date}</span>
+                            </div>
+                          ) : (
+                            <div></div> 
+                          )}
+                          
+                          <span className="text-primary/80 group-hover:text-primary transition-colors">Ver detalles</span>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="flex-shrink-0 w-10 h-10 rounded bg-muted flex items-center justify-center mr-3">
+                          <FileSymlink className="text-primary/80" size={18} />
+                        </div>
+                        
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="px-2 py-0.5 text-xs rounded-full bg-muted text-muted-foreground">
+                              {regulation.escala_normativa_label || regulation.escala_normativa}
+                            </span>
+                            {regulation.date && (
+                              <span className="text-xs text-muted-foreground">{regulation.date}</span>
+                            )}
+                          </div>
+                          
+                          <h3 className="font-medium mb-1 group-hover:text-primary transition-colors line-clamp-1">{regulation.titulo}</h3>
+                          
+                          <div className="flex flex-wrap items-center gap-1 mb-1">
+                            {(regulation.ciudad || regulation.ccaa || regulation.provincia) && (
+                              <>
+                                <MapPin size={12} className="text-muted-foreground" />
+                                <span className="text-muted-foreground mr-2">
+                                  {[
+                                    regulation.ccaa, 
+                                    regulation.provincia, 
+                                    regulation.ciudad
+                                  ].filter(Boolean).join(', ')}
+                                </span>
+                              </>
+                            )}
+                            
+                            {/* Tags for sustainability and governance */}
+                            {regulation.sostenibilidad_economica && (
+                              <span className="px-1.5 py-0.5 text-xs rounded-full bg-yellow-100/50 text-yellow-700">
+                                SE
+                              </span>
+                            )}
+                            {regulation.sostenibilidad_ambiental && (
+                              <span className="px-1.5 py-0.5 text-xs rounded-full bg-emerald-100/50 text-emerald-700">
+                                SA
+                              </span>
+                            )}
+                            {regulation.cambio_climatico && (
+                              <span className="px-1.5 py-0.5 text-xs rounded-full bg-blue-100/50 text-blue-700">
+                                CC
+                              </span>
+                            )}
+                            {regulation.sostenibilidad_social && (
+                              <span className="px-1.5 py-0.5 text-xs rounded-full bg-amber-100/50 text-amber-700">
+                                SS
+                              </span>
+                            )}
+                            {regulation.gobernanza_urbana && (
+                              <span className="px-1.5 py-0.5 text-xs rounded-full bg-purple-100/50 text-purple-700">
+                                GU
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </motion.article>
+                ))}
+              </AnimatePresence>
+            )}
           </div>
         )}
-        
+
+        {/* Show loading indicator when fetching more data */}
+        {isLoading && regulations.length > 0 && (
+          <div className="flex justify-center mt-4">
+            <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-primary"></div>
+          </div>
+        )}
+
         {/* Pagination */}
         {totalPages > 1 && (
           <div className="mt-6 flex justify-between items-center">
             <div className="text-xs text-muted-foreground">
-              Mostrando {startItem} - {endItem} de {sortedRegulations.length} resultados
+              Mostrando {startItem} - {endItem} de {totalCount} resultados
             </div>
             
             <div className="flex items-center space-x-1">
@@ -416,6 +464,14 @@ const RegulationsPanel: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Show subtle background loading indicator */}
+      {hasMore && !isLoading && regulations.length > 0 && (
+        <div className="fixed bottom-4 right-4 bg-background/80 border border-border rounded-full p-2 shadow-md flex items-center space-x-2">
+          <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-primary"></div>
+          <span className="text-xs text-muted-foreground">Cargando todos los datos...</span>
+        </div>
+      )}
     </div>
   );
 };
