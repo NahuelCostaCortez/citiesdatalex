@@ -28,7 +28,7 @@ const RegulationsPanel: React.FC = () => {
     hasMore
   } = useRegulations();
   
-  const [sortOption, setSortOption] = useState('recent');
+  const [sortOption, setSortOption] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -71,17 +71,20 @@ const RegulationsPanel: React.FC = () => {
     }
   }, [regulations]);
 
-  // Sort regulations based on selected option
+  // Sort regulations based on selected option, but only if a sort option is selected
   const sortedRegulations = useMemo(() => {
     const regulationsCopy = [...regulationsWithLabels];
     
+    // Only sort if user has explicitly selected a sort option
+    if (!sortOption) {
+      return regulationsCopy;
+    }
+    
     switch (sortOption) {
-      case 'recent':
-        return regulationsCopy.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-      case 'oldest':
-        return regulationsCopy.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-      case 'name a-z':
+      case 'a-z':
         return regulationsCopy.sort((a, b) => a.titulo.localeCompare(b.titulo));
+      case 'z-a':
+        return regulationsCopy.sort((a, b) => b.titulo.localeCompare(a.titulo));
       default:
         return regulationsCopy;
     }
@@ -133,11 +136,6 @@ const RegulationsPanel: React.FC = () => {
               ) : (
                 <>
                   <span>{totalCount} resultados encontrados</span>
-                  {hasMore && (
-                    <span className="ml-2 text-muted-foreground text-[10px] italic">
-                      (cargando datos adicionales...)
-                    </span>
-                  )}
                 </>
               )}
             </p>
@@ -151,7 +149,7 @@ const RegulationsPanel: React.FC = () => {
                 onClick={() => setSortDropdownOpen(!sortDropdownOpen)}
               >
                 <ArrowDownUp size={14} className="mr-1" />
-                <span>Sort</span>
+                <span>Ordenar</span>
               </motion.button>
               
               <AnimatePresence>
@@ -162,16 +160,22 @@ const RegulationsPanel: React.FC = () => {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -5 }}
                   >
-                    {['Recent', 'Oldest', 'Relevance', 'Name A-Z'].map((option) => (
+                    {[
+                      { id: '', label: 'Sin ordenar' },
+                      { id: 'a-z', label: 'Nombre A-Z' },
+                      { id: 'z-a', label: 'Nombre Z-A' }
+                    ].map((option) => (
                       <button
-                        key={option}
-                        className="block w-full text-left px-2 py-1.5 text-xs rounded hover:bg-muted"
+                        key={option.id}
+                        className={`block w-full text-left px-2 py-1.5 text-xs rounded hover:bg-muted ${
+                          sortOption === option.id ? 'bg-muted/70 font-medium' : ''
+                        }`}
                         onClick={() => {
-                          setSortOption(option.toLowerCase());
+                          setSortOption(option.id);
                           setSortDropdownOpen(false);
                         }}
                       >
-                        {option}
+                        {option.label}
                       </button>
                     ))}
                   </motion.div>

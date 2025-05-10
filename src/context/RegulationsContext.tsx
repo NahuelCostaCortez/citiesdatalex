@@ -343,6 +343,7 @@ export const RegulationsProvider: React.FC<{ children: ReactNode }> = ({ childre
       // Use the cached allRegulations instead of fetching from API
       if (!query) {
         setRegulations(allRegulations);
+        setTotalCount(allRegulations.length); // Reset total count to all regulations
       } else {
         const lowerQuery = query.toLowerCase();
         const filtered = allRegulations.filter(reg => {
@@ -357,6 +358,7 @@ export const RegulationsProvider: React.FC<{ children: ReactNode }> = ({ childre
         });
         
         setRegulations(filtered);
+        setTotalCount(filtered.length); // Update total count to match filtered results
       }
       // Clear any previous error
       setError(null);
@@ -372,6 +374,7 @@ export const RegulationsProvider: React.FC<{ children: ReactNode }> = ({ childre
     setSearchQuery('');
     // Reset to all regulations when search query is cleared
     setRegulations(allRegulations);
+    setTotalCount(allRegulations.length); // Reset total count
   }, [allRegulations]);
 
   const resetFilters = useCallback(() => {
@@ -399,6 +402,9 @@ export const RegulationsProvider: React.FC<{ children: ReactNode }> = ({ childre
     //    to ALL regulations without any filtering logic
     setRegulations(allRegulations);
     
+    // 5. Reset total count to match all regulations
+    setTotalCount(allRegulations.length);
+    
   }, [allRegulations]);
 
   const applyFilters = useCallback((locationFilter?: {ccaa?: string, provincia?: string, municipio?: string}) => {
@@ -423,6 +429,7 @@ export const RegulationsProvider: React.FC<{ children: ReactNode }> = ({ childre
       if (!anyFiltersActive) {
         setRegulations(allRegulations);
         setFilterActive(false);
+        setTotalCount(allRegulations.length); // Reset to total count
         setError(null);
         setIsLoading(false);
         return;
@@ -520,6 +527,8 @@ export const RegulationsProvider: React.FC<{ children: ReactNode }> = ({ childre
       }
       
       setRegulations(filteredResults);
+      // Update totalCount to reflect the number of filtered results
+      setTotalCount(filteredResults.length);
       setFilterActive(
         Boolean(filters.ambito.length > 0 || 
         filters.scale.length > 0 || 
@@ -542,6 +551,7 @@ export const RegulationsProvider: React.FC<{ children: ReactNode }> = ({ childre
     if (allRegulations.length > 0) {
       // Force update by creating a new array reference
       setRegulations([...allRegulations]);
+      setTotalCount(allRegulations.length); // Reset total count
       console.log('FORCE RESET: Regulations have been force reset');
     } else {
       console.log('FORCE RESET: No data available in allRegulations');
