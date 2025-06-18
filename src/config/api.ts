@@ -2,7 +2,7 @@
 // Centralized configuration for all backend service endpoints
 
 // Base URL for the main backend API
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://vies163146.edv.uniovi.es:8000';//'http://localhost:8000';
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://vies163146.edv.uniovi.es';//'http://localhost:8000';
 
 // API endpoints
 export const API_ENDPOINTS = {
