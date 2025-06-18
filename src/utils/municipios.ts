@@ -52,10 +52,15 @@ export const useMunicipios = (): {
             const provincia = columns[4]; // PROVINCIA
             
             // Convert coordinates from string to number
-            const lat = parseFloat(columns[14]); // LATITUD_ETRS89
-            const lng = parseFloat(columns[13]); // LONGITUD_ETRS89
+            // Replace comma with dot for decimal separator
+            const latStr = columns[14].replace(',', '.'); // LATITUD_ETRS89
+            const lngStr = columns[13].replace(',', '.'); // LONGITUD_ETRS89
+            
+            const lat = parseFloat(latStr);
+            const lng = parseFloat(lngStr);
             
             if (!isNaN(lat) && !isNaN(lng) && nombre) {
+              
               parsed.push({
                 nombre,
                 lat,

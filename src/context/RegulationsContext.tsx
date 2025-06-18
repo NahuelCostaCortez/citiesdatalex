@@ -24,6 +24,8 @@ export interface Regulation {
   cambio_climatico: string;
   gobernanza_urbana: string;
   date: string;
+  disponible: boolean;
+  resumen: string;
 }
 
 type Filters = {
@@ -455,14 +457,23 @@ export const RegulationsProvider: React.FC<{ children: ReactNode }> = ({ childre
       // Apply section filters
       if (filters.ambito.length > 0) {
         filteredResults = filteredResults.filter(reg => {
-          // Check if any of the ambito filters match
-          if (filters.ambito.includes('economic') && safeGetValue(reg, 'sostenibilidad_economica')) return true;
-          if (filters.ambito.includes('environmental') && safeGetValue(reg, 'sostenibilidad_ambiental')) return true;
-          if (filters.ambito.includes('climate') && safeGetValue(reg, 'cambio_climatico')) return true;
-          if (filters.ambito.includes('social') && safeGetValue(reg, 'sostenibilidad_social')) return true;
-          if (filters.ambito.includes('urban') && safeGetValue(reg, 'gobernanza_urbana')) return true;
-          
-          return false;
+          // Check if ALL selected ambito filters match
+          return filters.ambito.every(filter => {
+            switch (filter) {
+              case 'economic':
+                return safeGetValue(reg, 'sostenibilidad_economica') !== '';
+              case 'environmental':
+                return safeGetValue(reg, 'sostenibilidad_ambiental') !== '';
+              case 'climate':
+                return safeGetValue(reg, 'cambio_climatico') !== '';
+              case 'social':
+                return safeGetValue(reg, 'sostenibilidad_social') !== '';
+              case 'urban':
+                return safeGetValue(reg, 'gobernanza_urbana') !== '';
+              default:
+                return false;
+            }
+          });
         });
       }
       

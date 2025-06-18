@@ -4,6 +4,11 @@ import { useRegulations } from '../context/RegulationsContext';
 import { Globe } from 'lucide-react';
 import { useMunicipios } from '../utils/municipios';
 import ClientOnly from './ClientOnly';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+import 'leaflet.markercluster';
+import 'leaflet.markercluster/dist/MarkerCluster.css';
+import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 
 // Simple map implementation to avoid react-leaflet issues
 const MapView: React.FC = () => {
@@ -12,7 +17,7 @@ const MapView: React.FC = () => {
   const { municipios, loading, error, getMunicipioByName } = useMunicipios();
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
-  const markersRef = useRef<any[]>([]);
+  const markerClusterGroupRef = useRef<any>(null);
   
   // Filter regulations that have a city field
   const regulationsWithCity = regulations.filter(reg => reg.ciudad?.trim());
@@ -24,14 +29,9 @@ const MapView: React.FC = () => {
       if (typeof window !== 'undefined' && mapRef.current) {
         const initMap = async () => {
           try {
-            // Dynamically import Leaflet
-            const L = await import('leaflet');
-            await import('leaflet/dist/leaflet.css');
-            
             // Clear any existing map instance
             if (mapInstanceRef.current) {
               mapInstanceRef.current.remove();
-              markersRef.current = [];
             }
             
             // Create map instance
@@ -42,51 +42,97 @@ const MapView: React.FC = () => {
               attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             }).addTo(mapInstanceRef.current);
             
-            // Add markers for regulations with cities
-            markersRef.current = regulationsWithCity
-              .map(reg => {
-                const municipio = getMunicipioByName(reg.ciudad);
-                if (!municipio) return null;
+            // Create marker cluster group
+            markerClusterGroupRef.current = L.markerClusterGroup({
+              chunkedLoading: true,
+              maxClusterRadius: 30,
+              spiderfyOnMaxZoom: true,
+              showCoverageOnHover: true,
+              zoomToBoundsOnClick: true,
+              removeOutsideVisibleBounds: true,
+              animate: true,
+              disableClusteringAtZoom: 15,
+              spiderLegPolylineOptions: { weight: 1.5 },
+              iconCreateFunction: function(cluster: any) {
+                const childCount = cluster.getChildCount();
+                let size = 'small';
+                if (childCount > 100) size = 'large';
+                else if (childCount > 10) size = 'medium';
                 
-                // Create marker and popup
-                const marker = L.marker([municipio.lat, municipio.lng])
-                  .addTo(mapInstanceRef.current);
-                
-                // Create popup content
-                const popupContent = document.createElement('div');
-                popupContent.innerHTML = `
-                  <div class="p-1">
-                    <h3 class="font-medium text-sm">${reg.titulo}</h3>
-                    <p class="text-xs text-muted mt-1">${reg.ciudad}, ${reg.ccaa}</p>
-                    <p class="text-xs mt-2">
-                      <a 
-                        href="#" 
-                        class="text-blue-500 hover:underline view-document-link"
-                        data-regulation-id="${reg.id}"
-                      >
-                        Ver documento
-                      </a>
-                    </p>
-                  </div>
-                `;
-                
-                // Add click handler to the link
-                const link = popupContent.querySelector('.view-document-link') as HTMLElement;
-                if (link) {
-                  L.DomEvent.on(link, 'click', (e: Event) => {
-                    L.DomEvent.preventDefault(e);
-                    const regId = link.getAttribute('data-regulation-id');
-                    if (regId) {
-                      selectRegulation(regId);
-                      marker.closePopup();
-                    }
-                  });
+                return L.divIcon({
+                  html: `<div><span>${childCount}</span></div>`,
+                  className: `marker-cluster marker-cluster-${size}`,
+                  iconSize: L.point(40, 40)
+                });
+              }
+            });
+            
+            // Agrupar regulaciones por comunidad autónoma
+            const regulationsByCCAA = regulationsWithCity.reduce((acc, reg) => {
+              if (!reg.ccaa) return acc;
+              if (!acc[reg.ccaa]) {
+                acc[reg.ccaa] = [];
+              }
+              acc[reg.ccaa].push(reg);
+              return acc;
+            }, {} as Record<string, typeof regulationsWithCity>);
+
+            // Crear un cluster group para cada comunidad autónoma
+            Object.entries(regulationsByCCAA).forEach(([ccaa, regs]) => {
+              const markers = regs
+                .map(reg => {
+                  const municipio = getMunicipioByName(reg.ciudad);
+                  if (!municipio) return null;
+                  
+                  const marker = L.marker([municipio.lat, municipio.lng]);
+                  
+                  // Create popup content
+                  const popupContent = document.createElement('div');
+                  popupContent.innerHTML = `
+                    <div class="p-1">
+                      <h3 class="font-medium text-sm">${reg.titulo}</h3>
+                      <p class="text-xs text-muted mt-1">${reg.ciudad}, ${reg.ccaa}</p>
+                      <p class="text-xs mt-2">
+                        <a 
+                          href="#" 
+                          class="text-blue-500 hover:underline view-document-link"
+                          data-regulation-id="${reg.id}"
+                        >
+                          Ver documento
+                        </a>
+                      </p>
+                    </div>
+                  `;
+                  
+                  // Add click handler to the link
+                  const link = popupContent.querySelector('.view-document-link') as HTMLElement;
+                  if (link) {
+                    L.DomEvent.on(link, 'click', (e: Event) => {
+                      L.DomEvent.preventDefault(e);
+                      const regId = link.getAttribute('data-regulation-id');
+                      if (regId) {
+                        selectRegulation(regId);
+                        marker.closePopup();
+                      }
+                    });
+                  }
+                  
+                  marker.bindPopup(popupContent);
+                  return marker;
+                })
+                .filter(Boolean);
+
+              // Añadir todos los marcadores de esta comunidad al cluster group
+              markers.forEach(marker => {
+                if (marker) {
+                  markerClusterGroupRef.current.addLayer(marker);
                 }
-                
-                marker.bindPopup(popupContent);
-                return marker;
-              })
-              .filter(Boolean);
+              });
+            });
+            
+            // Add marker cluster group to map
+            mapInstanceRef.current.addLayer(markerClusterGroupRef.current);
+            
           } catch (err) {
             console.error('Error initializing map:', err);
           }
@@ -100,7 +146,10 @@ const MapView: React.FC = () => {
             mapInstanceRef.current.remove();
             mapInstanceRef.current = null;
           }
-          markersRef.current = [];
+          if (markerClusterGroupRef.current) {
+            markerClusterGroupRef.current.clearLayers();
+            markerClusterGroupRef.current = null;
+          }
         };
       }
     }, [regulationsWithCity]);
@@ -130,8 +179,6 @@ const MapView: React.FC = () => {
       onMouseEnter={() => setShowControls(true)}
       onMouseLeave={() => setShowControls(false)}
     >
-
-      
       <div ref={mapRef} className="w-full h-full z-10">
         <ClientOnly>
           <MapInstance />

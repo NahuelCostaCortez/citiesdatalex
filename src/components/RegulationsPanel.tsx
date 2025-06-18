@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRegulations } from '../context/RegulationsContext';
-import { BarChart3, CalendarDays, FileSymlink, MapPin, Filter, ArrowDownUp, ChevronLeft, ChevronRight, AlertCircle, Loader2 } from 'lucide-react';
+import { BarChart3, CalendarDays, FileSymlink, MapPin, Filter, ArrowDownUp, ChevronLeft, ChevronRight, AlertCircle, Loader2, MessageCircle, X, Send } from 'lucide-react';
 import { getAmbitoDescription, getEscalaNormativaDescription } from '../utils/lookupUtils';
 
 interface RegulationWithLabels {
@@ -13,7 +13,40 @@ interface RegulationWithLabels {
   [key: string]: any;
 }
 
+interface ChatMessage {
+  id: string;
+  type: 'user' | 'assistant';
+  content: string;
+  timestamp: Date;
+  queryType?: 'count' | 'display';
+  documentIds?: string[];
+  documents?: any[];
+}
+
 const ITEMS_PER_PAGE = 12;
+
+// Function to query the database with natural language
+async function queryDatabase(question: string) {
+  try {
+    const response = await fetch('http://localhost:8000/query-database/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        question: question
+      })
+    });
+    
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error querying database:', error);
+    throw error;
+  }
+}
+
+
 
 const RegulationsPanel: React.FC = () => {
   const { 
@@ -34,6 +67,84 @@ const RegulationsPanel: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [regulationsWithLabels, setRegulationsWithLabels] = useState<RegulationWithLabels[]>([]);
   const [labelsLoading, setLabelsLoading] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [chatMessage, setChatMessage] = useState('');
+  const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
+  const [isQueryLoading, setIsQueryLoading] = useState(false);
+
+  // Function to handle sending a message
+  const handleSendMessage = async () => {
+    if (!chatMessage.trim()) return;
+
+    const userMessage: ChatMessage = {
+      id: Date.now().toString(),
+      type: 'user',
+      content: chatMessage.trim(),
+      timestamp: new Date()
+    };
+
+    // Add user message to history
+    setChatHistory(prev => [...prev, userMessage]);
+    setChatMessage('');
+    setIsQueryLoading(true);
+
+    try {
+      const result = await queryDatabase(userMessage.content);
+      
+      let documents: any[] = [];
+      
+              // If we have document IDs, filter from the already loaded regulations
+        if (result.status === 'success' && result.query_type === 'display' && result.document_ids && result.document_ids.length > 0) {
+          console.log('Query result:', result);
+          console.log('Document IDs from result:', result.document_ids);
+          console.log('Available regulations:', regulationsWithLabels.length);
+          console.log('Sample regulation IDs:', regulationsWithLabels.slice(0, 3).map(r => ({ id: r.id, type: typeof r.id })));
+          
+          // Convert all IDs to strings for comparison
+          const documentIdsAsString = result.document_ids.map((id: any) => String(id));
+          
+          documents = regulationsWithLabels.filter(reg => 
+            documentIdsAsString.includes(String(reg.id))
+          );
+          
+          console.log('Filtered documents:', documents.length);
+          console.log('Found documents:', documents.map(d => ({ id: d.id, titulo: d.titulo })));
+          
+          // If no documents found in regulationsWithLabels, try with the base regulations array
+          if (documents.length === 0 && regulations.length > 0) {
+            console.log('Trying with base regulations array...');
+            console.log('Base regulations sample:', regulations.slice(0, 3).map(r => ({ id: r.id, type: typeof r.id })));
+            documents = regulations.filter(reg => 
+              documentIdsAsString.includes(String(reg.id))
+            );
+            console.log('Filtered from base regulations:', documents.length);
+          }
+        }
+      
+      const assistantMessage: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        type: 'assistant',
+        content: result.status === 'success' ? result.answer : `Error: ${result.message || 'No se pudo procesar la consulta'}`,
+        timestamp: new Date(),
+        queryType: result.status === 'success' ? result.query_type : undefined,
+        documentIds: result.status === 'success' ? result.document_ids : undefined,
+        documents: documents
+      };
+
+      setChatHistory(prev => [...prev, assistantMessage]);
+    } catch (error) {
+      const errorMessage: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        type: 'assistant',
+        content: 'Lo siento, hubo un error al procesar tu consulta. Por favor, intenta de nuevo.',
+        timestamp: new Date()
+      };
+
+      setChatHistory(prev => [...prev, errorMessage]);
+    } finally {
+      setIsQueryLoading(false);
+    }
+  };
 
   // Load descriptive labels for regulations
   useEffect(() => {
@@ -469,9 +580,242 @@ const RegulationsPanel: React.FC = () => {
         )}
       </div>
 
+      {/* Floating Chat Button */}
+      <motion.button
+        className="fixed bottom-6 right-6 w-14 h-14 bg-primary hover:bg-primary/90 text-primary-foreground rounded-full shadow-lg flex items-center justify-center z-50 transition-colors"
+        onClick={() => setIsChatOpen(!isChatOpen)}
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
+        style={{ zIndex: 1000 }}
+      >
+        <AnimatePresence mode="wait">
+          {isChatOpen ? (
+            <motion.div
+              key="close"
+              initial={{ rotate: -90, opacity: 0 }}
+              animate={{ rotate: 0, opacity: 1 }}
+              exit={{ rotate: 90, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <X size={24} />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="chat"
+              initial={{ rotate: 90, opacity: 0 }}
+              animate={{ rotate: 0, opacity: 1 }}
+              exit={{ rotate: -90, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <MessageCircle size={24} />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.button>
+
+      {/* Chat Box */}
+      <AnimatePresence>
+        {isChatOpen && (
+          <motion.div
+            className="fixed bottom-24 right-6 w-96 h-[32rem] glass-panel flex flex-col shadow-xl z-40"
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            transition={{ duration: 0.2 }}
+            style={{ zIndex: 999 }}
+          >
+            {/* Chat Header */}
+            <div className="p-4 border-b border-border/50">
+              <h3 className="font-semibold text-sm">Asistente</h3>
+              <p className="text-xs text-muted-foreground mt-1">
+                Pregunta información relativa a la base de datos
+              </p>
+            </div>
+
+            {/* Chat Messages Area */}
+            <div className="flex-1 p-4 overflow-y-auto scrollbar-thin">
+              <div className="space-y-3">
+                {chatHistory.length === 0 ? (
+                  <>
+                    {/* Welcome Message */}
+                    <div className="bg-muted/50 p-3 rounded-lg">
+                      <p className="text-sm text-muted-foreground">
+                        Aquí puedes consultar información relativa a:
+                      </p>
+                      <ul className="text-xs text-muted-foreground mt-2 space-y-1">
+                        <li>• Tipos de normativas disponibles</li>
+                        <li>• Búsquedas específicas por región</li>
+                        <li>• Categorías de sostenibilidad</li>
+                        <li>• Explicación de campos y filtros</li>
+                      </ul>
+                    </div>
+                    
+                    {/* Placeholder for future chat messages */}
+                    <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
+                      <MessageCircle size={32} className="mb-2 opacity-50" />
+                      <p className="text-xs">Escribe tu pregunta aquí abajo</p>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    {/* Chat Messages */}
+                    {chatHistory.map((message) => (
+                      <div
+                        key={message.id}
+                        className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
+                      >
+                        <div
+                          className={`max-w-[90%] ${
+                            message.type === 'user'
+                              ? 'bg-primary text-primary-foreground p-3 rounded-lg'
+                              : 'w-full'
+                          }`}
+                        >
+                          {message.type === 'user' ? (
+                            <>
+                              <p className="whitespace-pre-wrap text-sm">{message.content}</p>
+                              <p className="text-xs mt-1 opacity-70 text-primary-foreground/70">
+                                {message.timestamp.toLocaleTimeString()}
+                              </p>
+                            </>
+                          ) : (
+                            <div className="space-y-3">
+                              {/* Text Answer */}
+                              <div className="bg-muted/50 text-foreground p-3 rounded-lg">
+                                <p className="whitespace-pre-wrap text-sm">{message.content}</p>
+                                <p className="text-xs mt-1 opacity-70 text-muted-foreground">
+                                  {message.timestamp.toLocaleTimeString()}
+                                </p>
+                              </div>
+                              
+                              {/* Structured Data - Documents */}
+                              {message.queryType === 'display' && message.documents && message.documents.length > 0 && (
+                                <div className="space-y-2">
+                                  <h4 className="text-xs font-medium text-muted-foreground px-1">
+                                    Documentos encontrados:
+                                  </h4>
+                                  {message.documents.map((doc, index) => (
+                                    <motion.div
+                                      key={doc.id || index}
+                                      className="bg-background/50 border border-border/50 rounded-lg p-3 cursor-pointer hover:border-primary/50 transition-all duration-200"
+                                      onClick={() => selectRegulation(doc.id)}
+                                      whileHover={{ scale: 1.02 }}
+                                      whileTap={{ scale: 0.98 }}
+                                    >
+                                      <div className="flex items-start justify-between mb-2">
+                                        <span className="px-2 py-0.5 text-xs rounded-full bg-muted text-muted-foreground">
+                                          {doc.escala_normativa || 'N/A'}
+                                        </span>
+                                        {doc.date && (
+                                          <span className="text-xs text-muted-foreground">{doc.date}</span>
+                                        )}
+                                      </div>
+                                      
+                                      <h5 className="font-medium text-sm mb-2 line-clamp-2 hover:text-primary transition-colors">
+                                        {doc.titulo || doc.title || 'Título no disponible'}
+                                      </h5>
+                                      
+                                      {(doc.ciudad || doc.ccaa || doc.provincia) && (
+                                        <div className="flex items-center text-xs text-muted-foreground mb-2">
+                                          <MapPin size={10} className="mr-1" />
+                                          <span>
+                                            {[doc.ccaa, doc.provincia, doc.ciudad].filter(Boolean).join(', ')}
+                                          </span>
+                                        </div>
+                                      )}
+                                      
+                                      {/* Tags for sustainability and governance */}
+                                      <div className="flex flex-wrap gap-1">
+                                        {doc.sostenibilidad_economica && (
+                                          <span className="px-1.5 py-0.5 text-xs rounded-full bg-yellow-100/50 text-yellow-700">
+                                            SE
+                                          </span>
+                                        )}
+                                        {doc.sostenibilidad_ambiental && (
+                                          <span className="px-1.5 py-0.5 text-xs rounded-full bg-emerald-100/50 text-emerald-700">
+                                            SA
+                                          </span>
+                                        )}
+                                        {doc.cambio_climatico && (
+                                          <span className="px-1.5 py-0.5 text-xs rounded-full bg-blue-100/50 text-blue-700">
+                                            CC
+                                          </span>
+                                        )}
+                                        {doc.sostenibilidad_social && (
+                                          <span className="px-1.5 py-0.5 text-xs rounded-full bg-amber-100/50 text-amber-700">
+                                            SS
+                                          </span>
+                                        )}
+                                        {doc.gobernanza_urbana && (
+                                          <span className="px-1.5 py-0.5 text-xs rounded-full bg-purple-100/50 text-purple-700">
+                                            GU
+                                          </span>
+                                        )}
+                                      </div>
+                                    </motion.div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                    
+                    {/* Loading indicator */}
+                    {isQueryLoading && (
+                      <div className="flex justify-start">
+                        <div className="bg-muted/50 p-3 rounded-lg text-sm flex items-center">
+                          <Loader2 size={16} className="mr-2 animate-spin" />
+                          <span className="text-muted-foreground">Buscando...</span>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Chat Input */}
+            <div className="p-4 border-t border-border/50">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Escribe tu pregunta..."
+                  value={chatMessage}
+                  onChange={(e) => setChatMessage(e.target.value)}
+                  className="flex-1 px-3 py-2 bg-muted/50 border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter' && !isQueryLoading) {
+                      handleSendMessage();
+                    }
+                  }}
+                  disabled={isQueryLoading}
+                />
+                <motion.button
+                  className="px-3 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-md flex items-center justify-center disabled:opacity-50 disabled:pointer-events-none"
+                  whileTap={{ scale: 0.95 }}
+                  disabled={!chatMessage.trim() || isQueryLoading}
+                  onClick={handleSendMessage}
+                >
+                  {isQueryLoading ? (
+                    <Loader2 size={16} className="animate-spin" />
+                  ) : (
+                    <Send size={16} />
+                  )}
+                </motion.button>
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                Presiona Enter o el botón para enviar
+              </p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Show subtle background loading indicator */}
       {hasMore && !isLoading && regulations.length > 0 && (
-        <div className="fixed bottom-4 right-4 bg-background/80 border border-border rounded-full p-2 shadow-md flex items-center space-x-2">
+        <div className="fixed bottom-4 left-4 bg-background/80 border border-border rounded-full p-2 shadow-md flex items-center space-x-2">
           <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-primary"></div>
           <span className="text-xs text-muted-foreground">Cargando todos los datos...</span>
         </div>
