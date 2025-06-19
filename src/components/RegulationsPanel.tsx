@@ -28,7 +28,7 @@ const ITEMS_PER_PAGE = 12;
 // Function to query the database with natural language
 async function queryDatabase(question: string) {
   try {
-    const response = await fetch('http://localhost:8000/query-database/', {
+    const response = await fetch('https://vies163146.edv.uniovi.es/query-database/', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
