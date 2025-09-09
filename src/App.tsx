@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
+import FeedbackForm from './components/FeedbackForm';
 import { AnimatePresence } from 'framer-motion';
 import { RegulationsProvider } from './context/RegulationsContext';
 import { ThemeProvider } from './context/ThemeContext';
@@ -22,6 +23,7 @@ function App() {
             <Routes>
               {/* Main site routes */}
               <Route path="/" element={<Layout />} />
+              <Route path="/feedback" element={<FeedbackForm />} />
               
               {/* Admin routes */}
               <Route path="/admin/login" element={<AdminLogin />} />

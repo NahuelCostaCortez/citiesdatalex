@@ -463,7 +463,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, activeTab, setActiveTab }) =>
         
         <div className="mt-auto p-3 border-t border-border/50">
           <div className="text-xs text-muted-foreground">
-            CitiesDatalex v1.0.0
+            CitiesDatalex ® 2025
           </div>
         </div>
       </motion.div>

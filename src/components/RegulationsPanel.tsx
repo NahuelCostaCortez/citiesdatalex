@@ -4,6 +4,8 @@ import { useRegulations } from '../context/RegulationsContext';
 import { BarChart3, CalendarDays, FileSymlink, MapPin, Filter, ArrowDownUp, ChevronLeft, ChevronRight, AlertCircle, Loader2, MessageCircle, X, Send } from 'lucide-react';
 import { getAmbitoDescription, getEscalaNormativaDescription } from '../utils/lookupUtils';
 
+import { API_BASE_URL } from '../config/api';
+
 interface RegulationWithLabels {
   id: string;
   escala_normativa: string;
@@ -28,7 +30,7 @@ const ITEMS_PER_PAGE = 12;
 // Function to query the database with natural language
 async function queryDatabase(question: string) {
   try {
-    const response = await fetch('https://vies163146.edv.uniovi.es/query-database/', {
+    const response = await fetch(`${API_BASE_URL}/query-database/`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -37,7 +39,6 @@ async function queryDatabase(question: string) {
         question: question
       })
     });
-    
     const data = await response.json();
     return data;
   } catch (error) {
@@ -820,6 +821,16 @@ const RegulationsPanel: React.FC = () => {
           <span className="text-xs text-muted-foreground">Cargando todos los datos...</span>
         </div>
       )}
+      {/* Feedback Link at the bottom */}
+      <div className="w-full flex justify-center py-4">
+        <a
+          href="/feedback"
+          className="text-sm text-primary underline hover:text-primary/80 transition-colors"
+          style={{ position: 'fixed', bottom: 0, left: 0, width: '100%', textAlign: 'center', background: 'rgba(255,255,255,0.7)', zIndex: 10 }}
+        >
+          ¿Tienes comentarios sobre la web? ¡Envíalos aquí!
+        </a>
+      </div>
     </div>
   );
 };
