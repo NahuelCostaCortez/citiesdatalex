@@ -2,7 +2,8 @@
 // Centralized configuration for all backend service endpoints
 
 // Base URL for the main backend API
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://vies163146.edv.uniovi.es';//'http://localhost:8000';
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://vies163146.edv.uniovi.es';//
+//export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
 // API endpoints
 export const API_ENDPOINTS = {
@@ -10,6 +11,7 @@ export const API_ENDPOINTS = {
   CHAT_CREATE_SESSION: '/chat/create-session/',
   CHAT_QUERY: '/chat/query/',
   CHAT_SEND_MESSAGE: '/chat/send-message/',
+  CHATBOT_LOGIN: '/chatbot-login/',
   
   // Document processing endpoints
   UPLOAD_URL: '/upload-url/',
