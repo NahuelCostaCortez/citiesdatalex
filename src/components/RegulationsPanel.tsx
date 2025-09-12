@@ -1,10 +1,10 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRegulations } from '../context/RegulationsContext';
-import { BarChart3, CalendarDays, FileSymlink, MapPin, Filter, ArrowDownUp, ChevronLeft, ChevronRight, AlertCircle, Loader2, MessageCircle, X, Send } from 'lucide-react';
+import { BarChart3, CalendarDays, FileSymlink, MapPin, Filter, ArrowDownUp, ChevronLeft, ChevronRight, AlertCircle, Loader2, MessageCircle, X, Send, Lock, Eye, EyeOff, CheckCircle, XCircle } from 'lucide-react';
 import { getAmbitoDescription, getEscalaNormativaDescription } from '../utils/lookupUtils';
 
-import { API_BASE_URL } from '../config/api';
+import { buildApiUrl, API_ENDPOINTS, getApiConfig, API_BASE_URL } from '../config/api';
 
 interface RegulationWithLabels {
   id: string;
@@ -47,6 +47,35 @@ async function queryDatabase(question: string) {
   }
 }
 
+// Function to login to chatbot
+async function loginChatbot(email: string, password: string) {
+  try {
+    const loginData = { email, password };
+    const url = buildApiUrl(API_ENDPOINTS.CHATBOT_LOGIN);
+    const config = getApiConfig('POST', loginData);
+    
+    console.log('🔍 Chatbot Login Debug Info:');
+    console.log('URL:', url);
+    console.log('Request body:', loginData);
+    
+    const response = await fetch(url, config);
+    const result = await response.json();
+    
+    console.log('Login response status:', response.status);
+    console.log('Login response body:', result);
+    
+    if (!response.ok) {
+      console.error(`❌ Login failed with status ${response.status}:`, result);
+      return { success: false, message: result.message || 'Error de autenticación' };
+    }
+    
+    return { success: true, message: result.message || 'Login exitoso' };
+  } catch (error) {
+    console.error('❌ Error during login:', error);
+    return { success: false, message: 'Error de conexión' };
+  }
+}
+
 
 
 const RegulationsPanel: React.FC = () => {
@@ -72,10 +101,63 @@ const RegulationsPanel: React.FC = () => {
   const [chatMessage, setChatMessage] = useState('');
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
   const [isQueryLoading, setIsQueryLoading] = useState(false);
+  
+  // Login state for chat
+  const [showLoginForm, setShowLoginForm] = useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [loginStatus, setLoginStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [loginNotification, setLoginNotification] = useState('');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+
+  // Function to handle login
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim() || !password.trim()) return;
+    
+    setIsLoggingIn(true);
+    setLoginNotification('Autenticando...');
+    
+    try {
+      const result = await loginChatbot(email, password);
+      
+      if (result.success) {
+        setLoginStatus('success');
+        setLoginNotification('¡Autenticación exitosa!');
+        setIsAuthenticated(true);
+        setShowLoginForm(false);
+        
+        // Clear form
+        setEmail('');
+        setPassword('');
+      } else {
+        setLoginStatus('error');
+        setLoginNotification(result.message || 'Error de autenticación');
+      }
+    } catch (error) {
+      setLoginStatus('error');
+      setLoginNotification('Error de conexión');
+    } finally {
+      setIsLoggingIn(false);
+      // Clear notification after 5 seconds
+      setTimeout(() => {
+        setLoginNotification('');
+        setLoginStatus('idle');
+      }, 5000);
+    }
+  };
 
   // Function to handle sending a message
   const handleSendMessage = async () => {
     if (!chatMessage.trim()) return;
+    
+    // Check if user is authenticated
+    if (!isAuthenticated) {
+      setShowLoginForm(true);
+      return;
+    }
 
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
@@ -146,6 +228,19 @@ const RegulationsPanel: React.FC = () => {
       setIsQueryLoading(false);
     }
   };
+
+  // Reset login state when chat is closed
+  useEffect(() => {
+    if (!isChatOpen) {
+      setShowLoginForm(false);
+      setIsAuthenticated(false);
+      setLoginStatus('idle');
+      setLoginNotification('');
+      setEmail('');
+      setPassword('');
+      setShowPassword(false);
+    }
+  }, [isChatOpen]);
 
   // Load descriptive labels for regulations
   useEffect(() => {
@@ -636,7 +731,119 @@ const RegulationsPanel: React.FC = () => {
             {/* Chat Messages Area */}
             <div className="flex-1 p-4 overflow-y-auto scrollbar-thin">
               <div className="space-y-3">
-                {chatHistory.length === 0 ? (
+                {showLoginForm ? (
+                  <>
+                    {/* Login Form */}
+                    <div className="flex flex-col items-center justify-center py-4">
+                      <div className="w-full max-w-sm">
+                        <div className="text-center mb-6">
+                          <Lock className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+                          <h4 className="text-lg font-semibold mb-2">Autenticación Requerida</h4>
+                          <p className="text-sm text-muted-foreground">
+                            Ingresa tus credenciales para acceder al chat
+                          </p>
+                        </div>
+
+                        {/* Login Status Notification */}
+                        {(isLoggingIn || loginNotification) && (
+                          <motion.div
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            className={`mb-4 p-3 rounded-lg border flex items-center ${
+                              loginStatus === 'success' 
+                                ? 'bg-green-50 border-green-200 text-green-800' 
+                                : loginStatus === 'error'
+                                ? 'bg-red-50 border-red-200 text-red-800'
+                                : 'bg-blue-50 border-blue-200 text-blue-800'
+                            }`}
+                          >
+                            {isLoggingIn ? (
+                              <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                            ) : loginStatus === 'success' ? (
+                              <CheckCircle className="w-4 h-4 mr-2" />
+                            ) : loginStatus === 'error' ? (
+                              <XCircle className="w-4 h-4 mr-2" />
+                            ) : null}
+                            <span className="text-sm font-medium">{loginNotification}</span>
+                          </motion.div>
+                        )}
+
+                        <form onSubmit={handleLogin} className="space-y-4">
+                          <div>
+                            <label htmlFor="chat-email" className="block text-sm font-medium text-foreground mb-1">
+                              Email
+                            </label>
+                            <input
+                              type="email"
+                              id="chat-email"
+                              value={email}
+                              onChange={(e) => setEmail(e.target.value)}
+                              disabled={isLoggingIn}
+                              placeholder="tu@email.com"
+                              className="w-full bg-muted border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 disabled:opacity-50 disabled:cursor-not-allowed"
+                              required
+                            />
+                          </div>
+                          
+                          <div>
+                            <label htmlFor="chat-password" className="block text-sm font-medium text-foreground mb-1">
+                              Contraseña
+                            </label>
+                            <div className="relative">
+                              <input
+                                type={showPassword ? "text" : "password"}
+                                id="chat-password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                disabled={isLoggingIn}
+                                placeholder="••••••••"
+                                className="w-full bg-muted border border-border rounded-lg px-3 py-2 pr-10 text-sm focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                required
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                disabled={isLoggingIn}
+                                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                              </button>
+                            </div>
+                          </div>
+                          
+                          <div className="flex gap-3 pt-2">
+                            <button
+                              type="button"
+                              onClick={() => setShowLoginForm(false)}
+                              disabled={isLoggingIn}
+                              className="flex-1 bg-muted text-muted-foreground rounded-lg px-4 py-2 text-sm font-medium hover:bg-muted/80 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              Cancelar
+                            </button>
+                            <button
+                              type="submit"
+                              disabled={isLoggingIn || !email.trim() || !password.trim()}
+                              className="flex-1 bg-primary text-primary-foreground rounded-lg px-4 py-2 text-sm font-medium hover:bg-primary/90 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              {isLoggingIn ? (
+                                <>
+                                  <Loader2 className="w-4 h-4 animate-spin" />
+                                  Autenticando
+                                </>
+                              ) : (
+                                <>
+                                  <Lock className="w-4 h-4" />
+                                  Ingresar
+                                </>
+                              )}
+                            </button>
+                          </div>
+                        </form>
+                      </div>
+                    </div>
+                  </>
+                ) : chatHistory.length === 0 ? (
                   <>
                     {/* Welcome Message */}
                     <div className="bg-muted/50 p-3 rounded-lg">
@@ -782,21 +989,29 @@ const RegulationsPanel: React.FC = () => {
               <div className="flex gap-2">
                 <input
                   type="text"
-                  placeholder="Escribe tu pregunta..."
+                  placeholder={
+                    showLoginForm 
+                      ? "Inicia sesión para continuar..." 
+                      : isQueryLoading
+                      ? "Enviando mensaje..."
+                      : "Escribe tu pregunta..."
+                  }
                   value={chatMessage}
                   onChange={(e) => setChatMessage(e.target.value)}
-                  className="flex-1 px-3 py-2 bg-muted/50 border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                  className={`flex-1 px-3 py-2 bg-muted/50 border border-border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary ${
+                    (showLoginForm || isQueryLoading) ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
                   onKeyPress={(e) => {
-                    if (e.key === 'Enter' && !isQueryLoading) {
+                    if (e.key === 'Enter' && !isQueryLoading && !showLoginForm) {
                       handleSendMessage();
                     }
                   }}
-                  disabled={isQueryLoading}
+                  disabled={showLoginForm || isQueryLoading}
                 />
                 <motion.button
                   className="px-3 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-md flex items-center justify-center disabled:opacity-50 disabled:pointer-events-none"
                   whileTap={{ scale: 0.95 }}
-                  disabled={!chatMessage.trim() || isQueryLoading}
+                  disabled={showLoginForm || !chatMessage.trim() || isQueryLoading}
                   onClick={handleSendMessage}
                 >
                   {isQueryLoading ? (
@@ -807,7 +1022,10 @@ const RegulationsPanel: React.FC = () => {
                 </motion.button>
               </div>
               <p className="text-xs text-muted-foreground mt-2">
-                Presiona Enter o el botón para enviar
+                {!isAuthenticated && !showLoginForm ? 
+                  "Escribe cualquier mensaje para iniciar sesión" : 
+                  "Presiona Enter o el botón para enviar"
+                }
               </p>
             </div>
           </motion.div>

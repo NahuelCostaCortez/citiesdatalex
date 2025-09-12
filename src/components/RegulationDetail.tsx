@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, FileText, ChevronRight, Calendar, MapPin, Clock, MessageSquare, ArrowDownSquare, Zap, Loader2, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
+import { X, FileText, Calendar, MapPin, MessageSquare, ArrowDownSquare, Zap, Loader2, AlertCircle, CheckCircle, XCircle, Lock, Eye, EyeOff } from 'lucide-react';
 import { useRegulations } from '../context/RegulationsContext';
 import { processCodesString } from '../utils/tesauroUtils';
 import { getAmbitoDescription, getEscalaNormativaDescription } from '../utils/lookupUtils';
@@ -33,6 +33,16 @@ const RegulationDetail: React.FC = () => {
   const [sessionNotification, setSessionNotification] = useState('');
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isSendingMessage, setIsSendingMessage] = useState(false);
+  
+  // New state for login
+  const [showLoginForm, setShowLoginForm] = useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [loginStatus, setLoginStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [loginNotification, setLoginNotification] = useState('');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   
   // State to store descriptor data
   const [sostenibilidadAmbiental, setSostenibilidadAmbiental] = useState<DescriptorData[]>([]);
@@ -127,10 +137,46 @@ const RegulationDetail: React.FC = () => {
       setSessionNotification('');
       setSessionId(null);
       setIsSendingMessage(false);
+      // Reset login state
+      setShowLoginForm(false);
+      setIsAuthenticated(false);
+      setLoginStatus('idle');
+      setLoginNotification('');
+      setEmail('');
+      setPassword('');
+      setShowPassword(false);
     }
   }, [selectedRegulation]);
   
   if (!selectedRegulation && !isLoading && !error) return null;
+
+  const loginChatbot = async (email: string, password: string) => {
+    try {
+      const loginData = { email, password };
+      const url = buildApiUrl(API_ENDPOINTS.CHATBOT_LOGIN);
+      const config = getApiConfig('POST', loginData);
+      
+      console.log('🔍 Chatbot Login Debug Info:');
+      console.log('URL:', url);
+      console.log('Request body:', loginData);
+      
+      const response = await fetch(url, config);
+      const result = await response.json();
+      
+      console.log('Login response status:', response.status);
+      console.log('Login response body:', result);
+      
+      if (!response.ok) {
+        console.error(`❌ Login failed with status ${response.status}:`, result);
+        return { success: false, message: result.message || 'Error de autenticación' };
+      }
+      
+      return { success: true, message: result.message || 'Login exitoso' };
+    } catch (error) {
+      console.error('❌ Error during login:', error);
+      return { success: false, message: 'Error de conexión' };
+    }
+  };
 
   const createChatSession = async (documentId: string) => {
     try {
@@ -182,6 +228,12 @@ const RegulationDetail: React.FC = () => {
   const handleStartChat = async () => {
     if (!selectedRegulation?.id) return;
     
+    // Show login form if not authenticated
+    if (!isAuthenticated) {
+      setShowLoginForm(true);
+      return;
+    }
+    
     setIsCreatingSession(true);
     setSessionNotification('Preparando documento para el chat...');
     
@@ -198,21 +250,119 @@ const RegulationDetail: React.FC = () => {
           setChatMessages([
             { text: `He procesado el documento "${selectedRegulation.titulo}" y estoy listo para responder tus preguntas. ¿Qué te gustaría saber?`, sender: 'ai' }
           ]);
+          
+          // Clear success notification after 5 seconds
+          setTimeout(() => {
+            setSessionNotification('');
+            setSessionStatus('idle');
+          }, 5000);
               } else {
           setSessionStatus('error');
           setSessionNotification('Error al preparar el documento');
+          
+          // Clear error notification after 10 seconds
+          setTimeout(() => {
+            setSessionNotification('');
+            setSessionStatus('idle');
+          }, 10000);
         }
     } catch (error) {
       setSessionStatus('error');
       setSessionNotification('Error de conexión');
-    } finally {
-      setIsCreatingSession(false);
-      // Clear notification after different times based on status
-      const clearDelay = sessionStatus === 'success' ? 5000 : 10000; // Success messages stay longer
+      
+      // Clear error notification after 10 seconds
       setTimeout(() => {
         setSessionNotification('');
         setSessionStatus('idle');
-      }, clearDelay);
+      }, 10000);
+    } finally {
+      setIsCreatingSession(false);
+    }
+  };
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim() || !password.trim()) return;
+    
+    setIsLoggingIn(true);
+    setLoginNotification('Autenticando...');
+    
+    try {
+      const result = await loginChatbot(email, password);
+      
+      if (result.success) {
+        setLoginStatus('success');
+        setLoginNotification('¡Autenticación exitosa!');
+        setIsAuthenticated(true);
+        setShowLoginForm(false);
+        
+        // Clear form
+        setEmail('');
+        setPassword('');
+        
+        // Proceed with chat session creation after a short delay
+        setTimeout(async () => {
+          if (!selectedRegulation?.id) return;
+          
+          setIsCreatingSession(true);
+          setSessionNotification('Preparando documento para el chat...');
+          
+          try {
+            const result = await createChatSession(String(selectedRegulation.id));
+            
+            if (result.success) {
+              setSessionStatus('success');
+              setSessionNotification('¡Documento preparado! Ya puedes hacer preguntas.');
+              setChatSessionReady(true);
+              setSessionId(result.sessionId);
+              
+              // Update initial AI message
+              setChatMessages([
+                { text: `He procesado el documento "${selectedRegulation.titulo}" y estoy listo para responder tus preguntas. ¿Qué te gustaría saber?`, sender: 'ai' }
+              ]);
+              
+              // Clear success notification after 5 seconds
+              setTimeout(() => {
+                setSessionNotification('');
+                setSessionStatus('idle');
+              }, 5000);
+            } else {
+              setSessionStatus('error');
+              setSessionNotification('Error al preparar el documento');
+              
+              // Clear error notification after 10 seconds
+              setTimeout(() => {
+                setSessionNotification('');
+                setSessionStatus('idle');
+              }, 10000);
+            }
+          } catch (error) {
+            setSessionStatus('error');
+            setSessionNotification('Error de conexión');
+            
+            // Clear error notification after 10 seconds
+            setTimeout(() => {
+              setSessionNotification('');
+              setSessionStatus('idle');
+            }, 10000);
+          } finally {
+            setIsCreatingSession(false);
+          }
+        }, 1000);
+      } else {
+        setLoginStatus('error');
+        setLoginNotification(result.message || 'Error de autenticación');
+      }
+    } catch (error) {
+      setLoginStatus('error');
+      setLoginNotification('Error de conexión');
+    } finally {
+      setIsLoggingIn(false);
+      // Clear notification after 5 seconds
+      setTimeout(() => {
+        setLoginNotification('');
+        setLoginStatus('idle');
+      }, 5000);
     }
   };
 
@@ -636,7 +786,7 @@ const RegulationDetail: React.FC = () => {
                         </motion.div>
                       )}
                       
-                      {!chatSessionReady && !isCreatingSession && (
+                      {!chatSessionReady && !isCreatingSession && !showLoginForm && (
                         <motion.div
                           initial={{ opacity: 0, y: 20 }}
                           animate={{ opacity: 1, y: 0 }}
@@ -665,6 +815,121 @@ const RegulationDetail: React.FC = () => {
                             <Zap className="w-4 h-4" />
                             Empezar Chat
                           </button>
+                        </motion.div>
+                      )}
+
+                      {showLoginForm && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="flex flex-col items-center justify-center py-8"
+                        >
+                          <div className="w-full max-w-sm">
+                            <div className="text-center mb-6">
+                              <Lock className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+                              <h4 className="text-lg font-semibold mb-2">Autenticación Requerida</h4>
+                              <p className="text-sm text-muted-foreground">
+                                Ingresa tus credenciales para acceder al chat con IA
+                              </p>
+                            </div>
+
+                            {/* Login Status Notification */}
+                            {(isLoggingIn || loginNotification) && (
+                              <motion.div
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -10 }}
+                                className={`mb-4 p-3 rounded-lg border flex items-center ${
+                                  loginStatus === 'success' 
+                                    ? 'bg-green-50 border-green-200 text-green-800' 
+                                    : loginStatus === 'error'
+                                    ? 'bg-red-50 border-red-200 text-red-800'
+                                    : 'bg-blue-50 border-blue-200 text-blue-800'
+                                }`}
+                              >
+                                {isLoggingIn ? (
+                                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                                ) : loginStatus === 'success' ? (
+                                  <CheckCircle className="w-4 h-4 mr-2" />
+                                ) : loginStatus === 'error' ? (
+                                  <XCircle className="w-4 h-4 mr-2" />
+                                ) : null}
+                                <span className="text-sm font-medium">{loginNotification}</span>
+                              </motion.div>
+                            )}
+
+                            <form onSubmit={handleLogin} className="space-y-4">
+                              <div>
+                                <label htmlFor="email" className="block text-sm font-medium text-foreground mb-1">
+                                  Email
+                                </label>
+                                <input
+                                  type="email"
+                                  id="email"
+                                  value={email}
+                                  onChange={(e) => setEmail(e.target.value)}
+                                  disabled={isLoggingIn}
+                                  placeholder="tu@email.com"
+                                  className="w-full bg-muted border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                  required
+                                />
+                              </div>
+                              
+                              <div>
+                                <label htmlFor="password" className="block text-sm font-medium text-foreground mb-1">
+                                  Contraseña
+                                </label>
+                                <div className="relative">
+                                  <input
+                                    type={showPassword ? "text" : "password"}
+                                    id="password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    disabled={isLoggingIn}
+                                    placeholder="••••••••"
+                                    className="w-full bg-muted border border-border rounded-lg px-3 py-2 pr-10 text-sm focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    required
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    disabled={isLoggingIn}
+                                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground disabled:opacity-50 disabled:cursor-not-allowed"
+                                  >
+                                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                  </button>
+                                </div>
+                              </div>
+                              
+                              <div className="flex gap-3 pt-2">
+                                <button
+                                  type="button"
+                                  onClick={() => setShowLoginForm(false)}
+                                  disabled={isLoggingIn}
+                                  className="flex-1 bg-muted text-muted-foreground rounded-lg px-4 py-2 text-sm font-medium hover:bg-muted/80 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                  Cancelar
+                                </button>
+                                <button
+                                  type="submit"
+                                  disabled={isLoggingIn || !email.trim() || !password.trim()}
+                                  className="flex-1 bg-primary text-primary-foreground rounded-lg px-4 py-2 text-sm font-medium hover:bg-primary/90 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                  {isLoggingIn ? (
+                                    <>
+                                      <Loader2 className="w-4 h-4 animate-spin" />
+                                      Autenticando
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Lock className="w-4 h-4" />
+                                      Ingresar
+                                    </>
+                                  )}
+                                </button>
+                              </div>
+                            </form>
+                          </div>
                         </motion.div>
                       )}
                       
