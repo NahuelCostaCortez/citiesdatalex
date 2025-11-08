@@ -1,19 +1,37 @@
 import { Regulation } from '../context/RegulationsContext';
-import { supabase } from '../lib/supabase';
+import { buildApiUrl, API_ENDPOINTS, getApiConfig } from '../config/api';
 
 /**
- * Test connection to Supabase
+ * Normalize regulation data from backend
+ */
+const normalizeRegulation = (reg: any): Regulation => {
+  // Convert disponible string to boolean
+  if (typeof reg.disponible === 'string') {
+    reg.disponible = reg.disponible.toLowerCase() === 'true';
+  }
+  
+  // Ensure id is a string
+  if (typeof reg.id === 'number') {
+    reg.id = String(reg.id);
+  }
+  
+  return reg;
+};
+
+/**
+ * Test connection to backend
  */
 export const testConnection = async (): Promise<boolean> => {
   try {
-    const { data, error } = await supabase.from('registros').select('count');
+    const url = buildApiUrl(API_ENDPOINTS.REGULATIONS_COUNT);
+    const response = await fetch(url, getApiConfig('GET'));
     
-    if (error) {
-      console.error('Connection test failed:', error);
+    if (!response.ok) {
+      console.error('Connection test failed:', response.status, response.statusText);
       return false;
     }
     
-    console.log('Supabase connection successful!', data);
+    console.log('Backend connection successful!');
     return true;
   } catch (error) {
     console.error('Connection test failed:', error);
@@ -22,82 +40,22 @@ export const testConnection = async (): Promise<boolean> => {
 };
 
 /**
- * Fetch all regulations from Supabase
- */
-export const fetchRegulations = async (): Promise<Regulation[]> => {
-  try {
-    let allData: Regulation[] = [];
-    let page = 0;
-    const pageSize = 1000;
-    let hasMore = true;
-
-    while (hasMore) {
-      const { data, error } = await supabase
-        .from('registros')
-        .select('*')
-        .range(page * pageSize, (page + 1) * pageSize - 1);
-      
-      if (error) {
-        throw new Error(`Error fetching regulations: ${error.message}`);
-      }
-      
-      if (!data || data.length === 0) {
-        hasMore = false;
-      } else {
-        allData = [...allData, ...data];
-        page++;
-      }
-    }
-    
-    return allData;
-  } catch (error) {
-    console.error('Failed to fetch regulations:', error);
-    throw error;
-  }
-};
-
-/**
- * Fetch a single regulation by ID from Supabase
- */
-export const fetchRegulationById = async (id: string): Promise<Regulation> => {
-  try {
-    const { data, error } = await supabase
-      .from('registros')
-      .select('*')
-      .eq('id', id)
-      .single();
-    
-    if (error) {
-      throw new Error(`Error fetching regulation: ${error.message}`);
-    }
-    
-    if (!data) {
-      throw new Error(`Regulation with id ${id} not found`);
-    }
-    
-    return data;
-  } catch (error) {
-    console.error(`Failed to fetch regulation with id ${id}:`, error);
-    throw error;
-  }
-};
-
-/**
  * Get the total count of regulations
  */
 export const getRegulationsCount = async (): Promise<number> => {
   try {
-    const { count, error } = await supabase
-      .from('registros')
-      .select('*', { count: 'exact', head: true });
+    const url = buildApiUrl(API_ENDPOINTS.REGULATIONS_COUNT);
+    const response = await fetch(url, getApiConfig('GET'));
     
-    if (error) {
-      throw new Error(`Error getting regulations count: ${error.message}`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
     
-    return count || 0;
+    const data = await response.json();
+    console.log('Regulations count:', data.count);
+    return data.count || 0;
   } catch (error) {
-    console.error('Failed to get regulations count:', error);
+    console.error('Error fetching regulations count:', error);
     throw error;
   }
 };
@@ -107,37 +65,64 @@ export const getRegulationsCount = async (): Promise<number> => {
  */
 export const fetchPaginatedRegulations = async (
   page: number = 1, 
-  pageSize: number = 12,
-  filters?: any
+  pageSize: number = 60
 ): Promise<Regulation[]> => {
   try {
-    let query = supabase
-      .from('registros')
-      .select('*')
-      .range((page - 1) * pageSize, page * pageSize - 1);
+    const url = `${buildApiUrl(API_ENDPOINTS.REGULATIONS_LIST)}?page=${page}&limit=${pageSize}`;
+    const response = await fetch(url, getApiConfig('GET'));
     
-    // Apply filters if provided
-    if (filters?.searchQuery) {
-      const searchTerm = `%${filters.searchQuery}%`;
-      query = query.or(`titulo.ilike.${searchTerm},ciudad.ilike.${searchTerm},ambito.ilike.${searchTerm}`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
     
-    if (filters?.ambito?.length > 0) {
-      // Add ambito filters
-      // Note: Implement specific filter logic based on your schema
-    }
+    const data = await response.json();
     
-    // Add other filters as needed
+    // Handle both response formats: {results: [...]} and {data: [...]}
+    const regulations = data.results || data.data || [];
     
-    const { data, error } = await query;
+    // Normalize each regulation
+    const normalizedRegulations = regulations.map(normalizeRegulation);
     
-    if (error) {
-      throw new Error(`Error fetching paginated regulations: ${error.message}`);
-    }
-    
-    return data || [];
+    console.log(`Fetched ${normalizedRegulations.length} regulations for page ${page}`);
+    return normalizedRegulations;
   } catch (error) {
-    console.error('Failed to fetch paginated regulations:', error);
+    console.error('Error fetching paginated regulations:', error);
     throw error;
   }
+};
+
+/**
+ * Fetch a single regulation by ID
+ */
+export const fetchRegulationById = async (id: string): Promise<Regulation> => {
+  try {
+    const url = `${buildApiUrl(API_ENDPOINTS.REGULATIONS_DETAIL)}/${id}`;
+    const response = await fetch(url, getApiConfig('GET'));
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const responseData = await response.json();
+    
+    // Handle both response formats: direct object or {data: {...}}
+    const regulation = responseData.data || responseData;
+    
+    // Normalize the regulation data
+    const normalizedRegulation = normalizeRegulation(regulation);
+    
+    console.log('Fetched regulation by id:', id, normalizedRegulation);
+    return normalizedRegulation;
+  } catch (error) {
+    console.error(`Failed to fetch regulation with id ${id}:`, error);
+    throw error;
+  }
+};
+
+/**
+ * Search/filter regulations (legacy function - kept for compatibility)
+ */
+export const fetchRegulations = async (): Promise<Regulation[]> => {
+  console.warn('fetchRegulations is deprecated, use fetchPaginatedRegulations instead');
+  return fetchPaginatedRegulations(1, 1000);
 }; 

@@ -2,7 +2,7 @@
 // Centralized configuration for all backend service endpoints
 
 // Base URL for the main backend API
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://vies163146.edv.uniovi.es';//
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://vies163146.edv.uniovi.es';
 //export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
 // API endpoints
@@ -18,9 +18,11 @@ export const API_ENDPOINTS = {
   UPLOAD_PDF: '/upload-pdf/',
   PROCESS_DOCUMENT: '/process-document/',
   
-  // Future endpoints can be added here
-  // SEARCH: '/search/',
-  // ANALYTICS: '/analytics/',
+  // Regulations endpoints
+  REGULATIONS_COUNT: '/api/regulations/count',
+  REGULATIONS_LIST: '/api/regulations',
+  REGULATIONS_DETAIL: '/api/regulations',
+  REGULATIONS_SEARCH: '/api/regulations/search',
 } as const;
 
 // Helper function to build complete URL
